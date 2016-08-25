@@ -20,7 +20,9 @@ class Crawler(models.Model):
         ordering = ('name', 'id',)
 
 class Subscription(models.Model):
-    uid = models.CharField(max_length=100)
-    crawlerName = models.CharField(max_length=100)
+    user_id = models.CharField(max_length=100)
+    crawler_id = models.CharField(max_length=100)
+    crawler_name = models.CharField(max_length=100)
+    latest_pushtime = models.DateField()
     class Meta:
-        ordering=('uid', 'crawlerName',)
+        ordering=('user_id', 'crawler_name',)

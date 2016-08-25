@@ -15,4 +15,4 @@ class CrawlerSerializer(serializers.ModelSerializer):
 class SubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription
-        fields = ('uid', 'crawlerName')
+        fields = ('user_id', 'crawler_id', 'crawler_name', 'latest_pushtime')

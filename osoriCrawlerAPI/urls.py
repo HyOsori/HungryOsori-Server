@@ -7,6 +7,8 @@ urlpatterns = [
     url(r'^users/(?P<id>[a-z0-9]+)/$', views.UserDetail.as_view()),
     url(r'^crawlers/$', views.CrawlerList.as_view()),
     url(r'^crawlers/(?P<name>[a-z0-9]+)/$', views.CrawlerDetail.as_view()),
+    url(r'^subscriptions/$', views.SubscriptionList.as_view()),
+    url(r'^subscriptions/find/$', views.SubscriptionDetail.as_view()),
 
 ]
 
