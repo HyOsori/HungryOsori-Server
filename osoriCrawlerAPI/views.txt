@@ -1,0 +1,57 @@
+from django.shortcuts import render
+from django.core.urlresolvers import reverse
+from osoriCrawlerAPI.models import UserProfile
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+@csrf_exempt
+def signup(request):
+    if request.method == "POST":
+        body_unicode = request.body.decode('utf-8')
+        body = json.loads(body_unicode)
+        uid = body['id']
+        upwd = body['password']
+
+        if UserProfile.objects.filter(id=uid).count() >0 :
+            result = uid + ' already exist'
+        else:
+            user = UserProfile(id=uid, password=upwd)
+            user.save()
+            result = uid + 'create'
+
+    elif request.method == "GET":
+        uid = request.GET.get("id")
+        upwd = request.GET.get("password")
+
+        if uid:
+            user = UserProfile.objects.filter(id=uid)
+            if user.count() > 0:
+                if user[0].password == upwd:
+                    result = uid + 'Login!'
+                else:
+                    result = uid + ' fail to login'
+            else:
+                result = uid + ' does not exist'
+
+        else:
+            result = uid + ' does not exist'
+    #update
+    elif request.method == 'UPDATE':
+
+    #delete
+    elif request.method == 'DELETE':
+        uid = request.GET.get("id")
+        upwd = request.GET.get("password")
+        if uid:
+            user = UserProfile.objects.filter(id=uid)
+            if user.count() > 0:
+                if user[0].password == upwd:
+                    user[0].delete()
+                    result = uid + ' Profile Deleted'
+                else:
+                    result = 'Password error'
+            else:
+                result = uid + ' does not exist'
+    else:
+        result = "This request method doesn`t exist"
+    return render(request, 'registration/signup.html', {'result': result})
