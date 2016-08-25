@@ -10,7 +10,7 @@ class UserList(APIView):
     def get(self, request, format=None):
         users=UserProfile.objects.all()
         if users.count() == 0:
-            return Response('No')
+            return Response('No users')
         userSerializer = UserProfileSerializer(users, many=True)
         return Response(userSerializer.data)
 
@@ -40,6 +40,8 @@ class UserDetail(APIView):
 
     def put(self, request, id, format=None):
         user = self.get_object(id)
+        if user == False:
+            return Response("Invalid user", status=status.HTTP_400_BAD_REQUEST)
         data = request.data
         data['password'] = make_password(password=data['password'], salt=None, hasher='default')
         userSerializer = UserProfileSerializer(user, data=data)
@@ -51,15 +53,17 @@ class UserDetail(APIView):
     def delete(self, request, id, format=None):
         user=self.get_object(id)
         if user == False:
-            return Response("invalid user")
+            return Response("Invalid user", status=status.HTTP_400_BAD_REQUEST)
         user.delete()
         return Response(id + " deleted")
 
 class CrawlerList(APIView):
     def get(self, request, format=None):
         crawlers=Crawler.objects.all()
-        crawlerSerializer=CrawlerSerializer(crawlers, many=True)
-        return Response(crawlerSerializer.data)
+        if crawlers != None:
+            crawlerSerializer=CrawlerSerializer(crawlers, many=True)
+            return Response(crawlerSerializer.data)
+        return Response("No crawler list")
 
     def post(self, request, format=None):
         crawlerSerializer=CrawlerSerializer(data=request.data)
@@ -77,11 +81,15 @@ class CrawlerDetail(APIView):
 
     def get(self, request, name, format=None):
         crawler= self.get_object(name)
-        crawlerSerializer=CrawlerSerializer(crawler)
-        return Response(crawlerSerializer.data)
+        if crawler != False:
+            crawlerSerializer=CrawlerSerializer(crawler)
+            return Response(crawlerSerializer.data)
+        return Response("Invalid crawler", status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, name, format=None):
         crawler=self.get_object(name)
+        if crawler == False:
+            return Response("Invalid crawler", status=status.HTTP_400_BAD_REQUEST)
         crawlerSerializer=CrawlerSerializer(crawler, data=request.data)
         if crawlerSerializer.is_valid():
             crawlerSerializer.save()
@@ -91,7 +99,7 @@ class CrawlerDetail(APIView):
     def delete(self, request, name, format=None):
         crawler=self.get_object(name)
         if crawler == False:
-            Response("invalid Crawler")
+            Response("Invalid crawler", status=status.HTTP_400_BAD_REQUEST)
         crawler.delete()
         return Response(name+" deleted")
 
@@ -115,16 +123,16 @@ class SubscriptionDetail(APIView):
         if user_id != None:
             subscription = Subscription.objects.filter(user_id=user_id)
             if subscription.count() == 0:
-                return Response("No Subscriptions", status=status.HTTP_400_BAD_REQUEST)
+                return Response("No subscriptions", status=status.HTTP_400_BAD_REQUEST)
             subscriptionSerializer = SubscriptionSerializer(subscription, many=True)
 
         elif crawler_id != None:
             subscription = Subscription.objects.filter(crawler_id=crawler_id)
             if subscription.count() == 0:
-                return Response("No Subscriptions", status=status.HTTP_400_BAD_REQUEST)
+                return Response("No subscriptions", status=status.HTTP_400_BAD_REQUEST)
             subscriptionSerializer = SubscriptionSerializer(subscription, many=True)
         else:
-            return Response("No Subscriptions" ,status=status.HTTP_400_BAD_REQUEST)
+            return Response("No subscriptions" ,status=status.HTTP_400_BAD_REQUEST)
         return Response(subscriptionSerializer.data)
 
     def put(self, request, format=None):
@@ -138,4 +146,5 @@ class SubscriptionDetail(APIView):
     def delete(self, request, uid, format=None):
         subscription=self.get_object(uid)
         if subscription == False:
-            Response("invalid Subscription")
+            return Response("Invalid subscription", status=status.HTTP_400_BAD_REQUEST)
+        return Response(subscription+" deleted")
