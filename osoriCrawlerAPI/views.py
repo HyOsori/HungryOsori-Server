@@ -1,10 +1,35 @@
-from rest_framework import status
+from rest_framework import status, exceptions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.http import Http404
-from osoriCrawlerAPI.models import UserProfile, Crawler, Subscription
-from osoriCrawlerAPI.serializers import UserProfileSerializer, CrawlerSerializer, SubscriptionSerializer
-from django.contrib.auth.hashers import make_password
+from django.contrib.sessions.models import Session
+from osoriCrawlerAPI.models import UserProfile, Crawler, Subscription, PushToken
+from osoriCrawlerAPI.serializers import UserProfileSerializer, CrawlerSerializer, SubscriptionSerializer, PushTokenSerializer
+from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth import authenticate
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import View
+import re
+
+class Auth():
+    def verify_user(request):
+        try:
+            user_id=request.session['user_id']
+            user_key=request.session['user_key']
+        except:
+            return False, -1, -1, "No 'user_id' or 'user_key'"
+
+        try:
+            if request.session['user_id'] != user_id or request.session['user_key']!=user_key:
+                return False, -1, -1, "Invalid session"
+        except:
+            return False, -1, -1, "No have key in session"
+
+        return True, user_id, user_key
+
+    def email_auth(self):
+
+
 
 class UserList(APIView):
     def get(self, request, format=None):
@@ -16,6 +41,9 @@ class UserList(APIView):
 
     def post(self, request, format=None):
         data = request.data
+        if re.match(' /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i',
+                    data['user_id']) is not None:
+            return Response("Invalid email adress")
         data['password'] = make_password(password=data['password'], salt=None, hasher='default')
         userSerializer = UserProfileSerializer(data = data)
         if userSerializer.is_valid():
@@ -27,19 +55,24 @@ class UserList(APIView):
 class UserDetail(APIView):
     def get_object(self, id):
         try:
-            return UserProfile.objects.get(id=id)
+            return UserProfile.objects.get(user_id=id)
         except UserProfile.DoesNotExist:
             return False
 
-    def get(self, request, id, format=None):
-        user = self.get_object(id)
-        userSerializer=UserProfileSerializer(user)
-        if user != None:
-            return Response(userSerializer.data)
-        return Response(userSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get(self, request, format=None):
+        user_id=request.GET.get('user_id')
+        user = self.get_object(id=user_id)
+        if user == None:
+            return Response('No user')
+        is_verified = Auth.verify_user(request=request)
+        if is_verified[0] == False:
+            return Response(is_verified[3])
+        userSerializer = UserProfileSerializer(user)
+        return Response(userSerializer.data)
 
-    def put(self, request, id, format=None):
-        user = self.get_object(id)
+    def put(self, request, format=None):
+        user_id=request.GET.get('user_id')
+        user = self.get_object(id=user_id)
         if user == False:
             return Response("Invalid user", status=status.HTTP_400_BAD_REQUEST)
         data = request.data
@@ -50,8 +83,9 @@ class UserDetail(APIView):
             return Response(userSerializer.data)
         return Response(userSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, id, format=None):
-        user=self.get_object(id)
+    def delete(self, request, format=None):
+        user_id=request.GET.get('user_id')
+        user=self.get_object(id=user_id)
         if user == False:
             return Response("Invalid user", status=status.HTTP_400_BAD_REQUEST)
         user.delete()
@@ -121,6 +155,9 @@ class SubscriptionDetail(APIView):
         user_id = request.GET.get('user_id')
         crawler_id = request.GET.get('crawler_id')
         if user_id != None:
+            verified_user = Auth.verify_user(request=request)
+            if verified_user[0] is False:
+                return Response("Not valid user")
             subscription = Subscription.objects.filter(user_id=user_id)
             if subscription.count() == 0:
                 return Response("No subscriptions", status=status.HTTP_400_BAD_REQUEST)
@@ -135,16 +172,84 @@ class SubscriptionDetail(APIView):
             return Response("No subscriptions" ,status=status.HTTP_400_BAD_REQUEST)
         return Response(subscriptionSerializer.data)
 
-    def put(self, request, format=None):
-        subscription=self.get_object(uid)
-        subscriptionSerializer=CrawlerSerializer(subscription, data=request.data)
-        if subscriptionSerializer.is_valid():
-            subscriptionSerializer.save()
-            return Response(subscriptionSerializer.data)
-        return Response(subscriptionSerializer.errors(), status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request, format=None):
+        user_id=request.GET.get('user_id')
+        crawler_id=request.GET.get('crawler_id')
+        subscriptions = Subscription.objects.filter(user_id=user_id)
+        if subscriptions == None :
+            return Response('Invalid user_id', status=status.HTTP_400_BAD_REQUEST)
+        subscription = subscriptions.filter(crawler_id=crawler_id).delete()
 
-    def delete(self, request, uid, format=None):
-        subscription=self.get_object(uid)
         if subscription == False:
-            return Response("Invalid subscription", status=status.HTTP_400_BAD_REQUEST)
-        return Response(subscription+" deleted")
+            return Response("Invalid crawler_id", status=status.HTTP_400_BAD_REQUEST)
+        return Response(user_id+ "`s "+crawler_id+" subscription" +" deleted")
+
+
+class PushTokenList(APIView):
+    def get(self, request, format=None):
+        token = PushToken.objects.all()
+        tokenSerializer=PushTokenSerializer(token, many=True)
+        return Response(tokenSerializer.data)
+
+    def post(self, request, format=None):
+        tokenSerializer=PushTokenSerializer(data=request.data)
+        if tokenSerializer.is_valid():
+            tokenSerializer.save()
+            return Response(tokenSerializer.data)
+        return Response(tokenSerializer.error(), status=status.HTTP_400_BAD_REQUEST)
+
+class PushTokenDetail(APIView):
+    def get_object(self, id):
+        try:
+            return PushToken.objects.get(user_id=id)
+        except PushToken.DoesNotExist:
+            return False
+    def get(self, request, id, format=None):
+        token = self.get_object(id=id)
+        if token != None:
+            tokenSerializer=PushTokenSerializer(token)
+            return Response(tokenSerializer.data)
+        return Response("Invalid user-token", status= status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, id, format=None):
+        token = self.get_object(id)
+        if token == False:
+            return Response("Invalid user-token", status=status.HTTP_400_BAD_REQUEST)
+        token.delete()
+        return Response(token.user_id+ "`s " +token.token+ " deleted")
+
+class Login(APIView):
+    def authenticate(self, user_id, password):
+        try:
+            user=UserProfile.objects.get(user_id=user_id)
+        except:
+            return -1
+        chk_password=check_password(password=password, encoded=user.password)
+        if chk_password is False:
+            return -2
+        return user
+
+    def post(self, request):
+        try:
+            user_id=request.data['user_id']
+        except Exception as e:
+            return Response("No user_id")
+        try:
+            password=request.data['password']
+        except Exception as e:
+            return Response("No password")
+        try:
+            user_key = request.session['user_key']
+        except:
+            user_key = "asdf"
+        user=self.authenticate(user_id=user_id, password=password)
+
+        if user is -1:
+            return Response("Invalid user")
+        elif user is -2:
+            return Response("Invalid password")
+        else:
+            request.session['user_id']=user_id
+            request.session['user_key']=user_key
+            data = {'user_key':user_key, 'user_id':user_id, 'message':"Login success"}
+            return Response(data)

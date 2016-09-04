@@ -1,11 +1,11 @@
 from django.forms import widgets
 from rest_framework import serializers
-from osoriCrawlerAPI.models import UserProfile, Crawler, Subscription
+from osoriCrawlerAPI.models import UserProfile, Crawler, Subscription, PushToken
 
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = ('id', 'name', 'password', 'email', 'created', 'last_login')
+        fields = ('user_id', 'name', 'password', 'is_auth','created', 'last_login')
 
 class CrawlerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,3 +16,8 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription
         fields = ('user_id', 'crawler_id', 'crawler_name', 'latest_pushtime')
+
+class PushTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PushToken
+        fields = ('user_id', 'push_token')
