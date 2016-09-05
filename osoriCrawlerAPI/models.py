@@ -12,11 +12,11 @@ class UserProfile(models.Model):
     created = models.DateField(auto_now_add=True)
     last_login=models.DateField(auto_now=True)
 
-    def is_auth(self):
-        if self.is_auth is True:
-            return True
-        else:
+    def is_authenticated(self):
+        if self.is_auth is 'False':
             return False
+        else:
+            return True
 
     class Meta:
         ordering = ('created',)
