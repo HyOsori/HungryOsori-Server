@@ -12,7 +12,8 @@ urlpatterns = [
     url(r'^tokens/$', views.PushTokenList.as_view()),
     url(r'^tokens/(?P<id>[a-z0-9]+)/$', views.PushTokenDetail.as_view()),
     url(r'^login/$', views.Login.as_view()),
-    url(r'^logout/$', views.Login.as_view())
+    url(r'^logout/$', views.Login.as_view()),
+    url(r'^email_auth/(?P<auth>.+)/$', views.Auth.email_auth),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

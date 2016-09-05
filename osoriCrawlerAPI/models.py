@@ -3,13 +3,20 @@ from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
 from django.contrib.auth.hashers import make_password
 # Create your models here.
+
 class UserProfile(models.Model):
-    user_id = models.EmailField()
+    user_id = models.EmailField(unique=True)
     name = models.CharField(max_length=100)
     password = models.CharField(max_length=100)
-    is_auth = models.BooleanField(default=False)
+    is_auth = models.CharField(max_length=100, default='False')
     created = models.DateField(auto_now_add=True)
     last_login=models.DateField(auto_now=True)
+
+    def is_auth(self):
+        if self.is_auth is True:
+            return True
+        else:
+            return False
 
     class Meta:
         ordering = ('created',)

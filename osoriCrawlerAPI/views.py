@@ -1,21 +1,18 @@
 from rest_framework import status, exceptions
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.http import Http404
-from django.contrib.sessions.models import Session
-from osoriCrawlerAPI.models import UserProfile, Crawler, Subscription, PushToken
+from osoriCrawlerAPI.models import UserProfile, Crawler, Subscription, PushToken, Session
 from osoriCrawlerAPI.serializers import UserProfileSerializer, CrawlerSerializer, SubscriptionSerializer, PushTokenSerializer
 from django.contrib.auth.hashers import make_password, check_password
-from django.contrib.auth import authenticate
-from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import View
-import re
+from django.core.mail import send_mail
+from django.http import HttpResponse
+import re, json
 
 class Auth():
     def verify_user(request):
         try:
-            user_id=request.session['user_id']
-            user_key=request.session['user_key']
+            user_id=request.GET.get('user_id')
+            user_key=request.GET.get('user_key')
         except:
             return False, -1, -1, "No 'user_id' or 'user_key'"
 
@@ -27,8 +24,15 @@ class Auth():
 
         return True, user_id, user_key
 
-    def email_auth(self):
-
+    def email_auth(request, auth):
+        result = {}
+        try:
+            user=UserProfile.objects.get(is_auth=auth)
+        except:
+            return HttpResponse("Invalid user or already authenticated")
+        user.is_auth='True'
+        user.save()
+        return HttpResponse("Authenticated")
 
 
 class UserList(APIView):
@@ -45,9 +49,19 @@ class UserList(APIView):
                     data['user_id']) is not None:
             return Response("Invalid email adress")
         data['password'] = make_password(password=data['password'], salt=None, hasher='default')
-        userSerializer = UserProfileSerializer(data = data)
+        data['is_auth'] = 'asdf'
+        url = 'http://127.0.0.1:8000/email_auth/'+data['is_auth']+'/'
+        userSerializer = UserProfileSerializer(data=data)
         if userSerializer.is_valid():
             userSerializer.save()
+            send_mail(
+                'subject',
+                url+' 이 페이지를 클릭하세요.',
+                'bees1114@naver.com',
+                [data['user_id']],
+                fail_silently=False,
+            )
+
             return Response(userSerializer.data, status=status.HTTP_201_CREATED)
 
         return Response(userSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -249,7 +263,7 @@ class Login(APIView):
         elif user is -2:
             return Response("Invalid password")
         else:
-            request.session['user_id']=user_id
-            request.session['user_key']=user_key
+            request.session['user_key'] = user_key
+            request.session['user_id'] = user_id
             data = {'user_key':user_key, 'user_id':user_id, 'message':"Login success"}
             return Response(data)
