@@ -7,11 +7,11 @@ url: /users/
 2. 회원가입
 -----------------------------
 * url: /users/
-|Data|Description|
-|--- 
-|user_id|이메일형식아이디|
-|password|비밀번호|
-|name|사용자 이름|
+Data|Description
+---|--- 
+user_id|이메일형식아이디
+password|비밀번호
+name|사용자 이름
 
 * Response
 {
