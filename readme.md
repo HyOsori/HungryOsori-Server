@@ -6,7 +6,7 @@ url: /users/
 
 2. 회원가입
 -----------------------------
-* url: /users/ 포스트 형태로 회원가입 요청을 보냄./br
+* url: /users/ 포스트 형태로 회원가입 요청을 보냄.<br></br>
 Data|Description
 ---|--- 
 user_id|이메일형식아이디
