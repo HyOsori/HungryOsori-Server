@@ -6,20 +6,20 @@ url: /users/
 
 2. 회원가입
 -----------------------------
-* url: /users/ 포스트 형태로 회원가입 요청을 보냄.
-#Data|Description
+- url: /users/ 포스트 형태로 회원가입 요청을 보냄.
+Data|Description
 ---|--- 
 user_id|이메일형식아이디
 password|비밀번호
 name|사용자 이름
 
-* Response
+- Response
 {
 	"message":"Success"
 	"ErrorCode":0
 }
 
-* ErrorCode
+- ErrorCode
 |0|성공|
 |-1|에러|
 |-100|이미 존재하는 유저|
