@@ -22,10 +22,11 @@ class UserProfile(models.Model):
         ordering = ('created',)
 
 class Crawler(models.Model):
-    name = models.CharField(max_length=100)
+    crawler_id=models.CharField(max_length=100, unique=True)
+    crawler_name = models.CharField(max_length=100)
     created = models.DateField(auto_now_add=True)
     class Meta:
-        ordering = ('name', 'id',)
+        ordering = ('crawler_name', 'crawler_id',)
 
 class Subscription(models.Model):
     user_id = models.CharField(max_length=100)

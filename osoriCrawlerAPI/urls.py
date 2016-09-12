@@ -15,7 +15,8 @@ urlpatterns = [
     url(r'^logout/$', views.Login.as_view()),
     url(r'^email_auth/(?P<auth>.+)/$', views.Auth.email_auth),
     url(r'^send_temp_password/(?P<user_id>.+)/$', views.ForgetPassword.send_temp_password),
-    url(r'^password_change/$', views.ChangePassword.as_view())
+    url(r'^password_change/$', views.ChangePassword.as_view()),
+    url(r'^subscribers_pushtoken/$', views.SubscriberPushToken().as_view())
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
