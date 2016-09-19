@@ -49,7 +49,7 @@ name|사용자 이름
 {
 	"user_key": "...",
 	"message":"Success",
-	"error":0
+	"ErrorCode":0
 }
 
 * ErrorCode
