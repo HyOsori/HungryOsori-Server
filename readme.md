@@ -36,7 +36,7 @@ name|사용자 이름
 
 4. 로그인
 -----------------------------
-* url: /login/ user_id=osori@osori.com password=1234
+* url: /login/
 
 |Data|Description|
 ---|---
@@ -89,7 +89,7 @@ name|사용자 이름
 
 6. 유저가 구독중인 크롤러 목록
 -----------------------------
-* url:/subscriptions/item/ user_id=osori@osori.com user_key=asdf
+* url:/subscriptions/item/ 
 
 |Data|Description|
 ---|---
@@ -117,7 +117,7 @@ name|사용자 이름
 
 7. 유저가 구독하려는 크롤러 추가
 -----------------------------
-* url: /subscriptions/ user_id=osori@osori.com user_key=asdf crawler_id=...
+* url: /subscriptions/
 
 |Data|Description|
 ---|---
@@ -165,7 +165,7 @@ name|사용자 이름
 
 9. 푸시토큰 등록
 -----------------------------
-* url: /tokens/ user_id=osori@osori.com user_key=asdf token=...
+* url: /tokens/
 
 |Data|Description|
 ---|---
@@ -189,7 +189,7 @@ name|사용자 이름
 
 10. 패스워드 변경
 -----------------------------
-* url:/password_change/ user_id=osori@osori.com password=1234 new_password=123
+* url:/password_change/ 
 
 |Data|Description|
 ---|---
@@ -212,8 +212,12 @@ name|사용자 이름
 
 11. 비밀번호 찾기
 -------------------------
-* url: /send_temp_password/?osori@osori.com/  
-임시로 비밀번호를 설정해두고 이를 이메일로 보내주는 형태
+* url: /send_temp_password/  
+임시로 비밀번호를 설정해두고 이를 이메일로 보내주는 형태 포스트 방식으로 user_id를 보낸다
+
+|Data|Description|
+---|---
+|user_id|사용자아이디|
 
 * Response
 {
