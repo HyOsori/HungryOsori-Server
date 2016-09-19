@@ -141,7 +141,7 @@ name|사용자 이름
 
 8. 유저가 구독하고 있는 크롤러 제거
 -----------------------------
-* url: /subscriptions/item/ user_id=osori@osori.com user_key=asdf crawler_id=... (DELETE이용)
+* url: /subscriptions/item/delete/
 
 |Data|Description|
 ---|---
