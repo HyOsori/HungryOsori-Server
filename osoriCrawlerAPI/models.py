@@ -23,15 +23,16 @@ class UserProfile(models.Model):
 
 class Crawler(models.Model):
     crawler_id=models.CharField(max_length=100, unique=True)
-    crawler_name = models.CharField(max_length=100)
+    thumbnail_url=models.CharField(max_length=100, unique=True)
+    title = models.CharField(max_length=100)
+    description = models.CharField(max_length=100)
     created = models.DateField(auto_now_add=True)
     class Meta:
-        ordering = ('crawler_name', 'crawler_id',)
+        ordering = ('title', 'created', 'crawler_id',)
 
 class Subscription(models.Model):
     user_id = models.CharField(max_length=100)
     crawler_id = models.CharField(max_length=100)
-    crawler_name = models.CharField(max_length=100)
     latest_pushtime = models.DateField()
     class Meta:
         ordering=('user_id', 'crawler_name',)

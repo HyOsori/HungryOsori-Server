@@ -11,12 +11,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class CrawlerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Crawler
-        fields = ('crawler_id', 'crawler_name', 'created')
+        fields = ('crawler_id', 'thumbnail_url', 'description', 'title', 'created')
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription
-        fields = ('user_id', 'crawler_id', 'crawler_name', 'latest_pushtime')
+        fields = ('user_id', 'crawler_id', 'crawler_id', 'latest_pushtime')
 
 class PushTokenSerializer(serializers.ModelSerializer):
     class Meta:
