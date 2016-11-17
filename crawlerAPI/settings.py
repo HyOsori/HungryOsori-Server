@@ -77,8 +77,12 @@ WSGI_APPLICATION = 'crawlerAPI.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'crawler',
+        'USER': 'bees1114',
+        'PASSWORD': 'zmfhffj12',
+        'HOST': '',
+        'POST': '',
     }
 }
 
@@ -141,3 +145,10 @@ PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
     'django.contrib.auth.hashers.BCryptPasswordHasher',
 ]
+
+EMAIL_USE_TLS = True
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'beespjh@gmail.com'
+EMAIL_HOST_PASSWROD = ''
+EMAIL_PORT = 587

@@ -4,6 +4,7 @@ from django.contrib.sessions.models import Session
 from django.contrib.auth.hashers import make_password
 # Create your models here.
 
+'''Models for user profile'''
 class UserProfile(models.Model):
     user_id = models.EmailField(unique=True)
     name = models.CharField(max_length=100)
@@ -21,6 +22,7 @@ class UserProfile(models.Model):
     class Meta:
         ordering = ('created',)
 
+'''Models for Crawler'''
 class Crawler(models.Model):
     crawler_id=models.CharField(max_length=100, unique=True)
     thumbnail_url=models.CharField(max_length=100, unique=True)
@@ -30,6 +32,7 @@ class Crawler(models.Model):
     class Meta:
         ordering = ('title', 'created', 'crawler_id',)
 
+'''Models for Information of who subscript which crawlers '''
 class Subscription(models.Model):
     user_id = models.CharField(max_length=100)
     crawler_id = models.CharField(max_length=100)
@@ -37,6 +40,7 @@ class Subscription(models.Model):
     class Meta:
         ordering=('user_id', 'crawler_name',)
 
+'''Models for user and who`s device token'''
 class PushToken(models.Model):
     user_id = models.CharField(max_length=100)
     push_token = models.CharField(max_length=100)
