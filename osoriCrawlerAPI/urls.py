@@ -4,7 +4,7 @@ from osoriCrawlerAPI import views
 
 urlpatterns = [
     url(r'^users/$', views.UserList.as_view()),
-    url(r'^users/find/$', views.UserDetail.as_view()),
+    url(r'^user/$', views.UserDetail.as_view()),
     url(r'^crawlers/$', views.CrawlerList.as_view()),
     url(r'^crawlers/(?P<name>)/$', views.CrawlerDetail.as_view()),
     url(r'^subscriptions/$', views.SubscriptionList.as_view()),

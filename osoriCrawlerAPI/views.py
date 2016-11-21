@@ -39,7 +39,7 @@ class ErrorResponse():
         data={"message":message, "ErrorCode":ErrorCode}
         return Response(data)
 
-class ForgetPassword():
+class ForgetPassword(APIView):
     def make_temp_password():
         Strings=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','q','r','s',
                  't','u','v','w','x','y','z','0','1','2','3','4','5','6','7','8','9','0']
@@ -48,7 +48,8 @@ class ForgetPassword():
             password=password+Strings[random.randrange(0,35)]
         return password
 
-    def send_temp_password(self, user_id):
+    def post(self, user_id):
+        user_id=request.data['user_id']
         temp_password = ForgetPassword.make_temp_password()
         try:
             user= UserProfile.objects.get(user_id=user_id)
@@ -87,14 +88,19 @@ class UserList(APIView):
         if re.match(' /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i',
                     data['user_id']) is not None:
             return ErrorResponse.error_response(-200, 'Invalid email address')
-        exist=UserProfile.objects.filter(user_id=id)
+        exist=UserProfile.objects.filter(user_id=data['user_id'])
         if exist.count() != 0:
             return ErrorResponse.error_response(-100, 'Already exist user_id')
 
-        data['password'] = make_password(password=data['password'], salt=None, hasher='default')
-        data['is_auth'] = self.make_auth_key()
-        url = 'http://127.0.0.1:8000/email_auth/'+data['is_auth']+'/'
-        userSerializer = UserProfileSerializer(data=data)
+        password = make_password(password=data['password'], salt=None, hasher='default')
+        is_auth = self.make_auth_key()
+        url = 'http://127.0.0.1:8000/email_auth/'+is_auth+'/'
+        user = {}
+        user['user_id']=data['user_id']
+        user['name']=data['name']
+        user['password']=password
+        user['is_auth']=is_auth
+        userSerializer = UserProfileSerializer(data=user)
 
         if userSerializer.is_valid():
             userSerializer.save()
@@ -110,6 +116,25 @@ class UserList(APIView):
         return ErrorResponse.error_response(-1, 'Error')
 
 class UserDetail(APIView):
+    def make_user_key(self):
+        Strings = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'q', 'r', 's',
+                   't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
+
+        user_key = ''
+        for i in range(0, 15):
+            user_key = user_key + Strings[random.randrange(0, 35)]
+        return user_key
+
+    def authenticate(self, user_id, password):
+        try:
+            user = UserProfile.objects.get(user_id=user_id)
+        except:
+            return -1
+        chk_password = check_password(password=password, encoded=user.password)
+        if chk_password is False:
+            return -2
+        return user
+
     def get_object(self, id):
         try:
             return UserProfile.objects.get(user_id=id)
@@ -117,15 +142,54 @@ class UserDetail(APIView):
             return False
 
     def get(self, request, format=None):
-        user_id=request.GET.get('user_id')
-        user = self.get_object(id=user_id)
-        if user == False:
-            return ErrorResponse.error_response(-100, 'No user')
-        #is_verified = Auth.verify_user(request=request)
-        #if is_verified[0] == False:
-        #    return Response(is_verified[3])
-        userSerializer = UserProfileSerializer(user)
-        return_data={'message':'Success', 'data':userSerializer.data, 'ErrorCode':0}
+        try:
+            user_id = request.GET['user_id']
+        except Exception as e:
+            return_data = {'message': 'No user_id', 'ErrorCode': -1}
+            return Response(return_data)
+        try:
+            password = request.GET['password']
+        except Exception as e:
+            return_data = {'message': 'No password', 'ErrorCode': -1}
+            return Response(return_data)
+        try:
+            user_key = request.session['user_key']
+        except:
+            user_key = 'asdf'
+        try:
+            token = request.GET['token']
+        except Exception as e:
+            return_data = {'message': 'No token', 'ErrorCode': -1}
+            return Response(return_data)
+        try:
+            UserProfile.objects.get(user_id=user_id)
+        except:
+            return_data = {'message': 'Invalid user', 'ErrorCode': -100}
+            return Response(return_data)
+        user = self.authenticate(user_id=user_id, password=password)
+        if UserProfile.objects.get(user_id=user_id).is_authenticated() is not True:
+            return_data = {'message': 'Need authentication', 'ErrorCode': -300}
+            return Response(return_data)
+        if user is -1:
+            return_data = {'message': 'Invalid user', 'ErrorCode': -100}
+            return Response(return_data)
+        elif user is -2:
+            return_data = {'message': 'Invalid password', 'ErrorCode': -200}
+            return Response(return_data)
+
+        else:
+            request.session['user_key'] = user_key
+            request.session['user_id'] = user_id
+            user_token = {}
+            user_token['user_id'] = user_id
+            user_token['push_token'] = token
+            pushTokenSerializer = PushTokenSerializer(data=user_token)
+
+            if pushTokenSerializer.is_valid():
+                pushTokenSerializer.save()
+            data = {'user_key': user_key, 'user_id': user_id, 'message': "Login success", 'ErrorCode': 0}
+            return Response(data)
+
         return Response(return_data)
 
     def put(self, request, format=None):
@@ -291,25 +355,6 @@ class PushTokenDetail(APIView):
         return Response(token.user_id+ "`s " +token.token+ " deleted")
 
 class Login(APIView):
-    def make_user_key(self):
-        Strings = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'q', 'r', 's',
-                   't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
-
-        user_key = ''
-        for i in range(0, 15):
-            user_key = user_key + Strings[random.randrange(0, 35)]
-        return user_key
-
-    def authenticate(self, user_id, password):
-        try:
-            user=UserProfile.objects.get(user_id=user_id)
-        except:
-            return -1
-        chk_password=check_password(password=password, encoded=user.password)
-        if chk_password is False:
-            return -2
-        return user
-
     def post(self, request):
         try:
             user_id=request.data['user_id']
