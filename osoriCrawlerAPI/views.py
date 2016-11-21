@@ -48,7 +48,7 @@ class ForgetPassword(APIView):
             password=password+Strings[random.randrange(0,35)]
         return password
 
-    def post(self, user_id):
+    def send_temp_password(self, user_id):
         user_id=request.data['user_id']
         temp_password = ForgetPassword.make_temp_password()
         try:
