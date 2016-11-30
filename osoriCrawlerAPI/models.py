@@ -1,8 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
-from django.contrib.auth.hashers import make_password
-# Create your models here.
 
 '''Models for user profile'''
 class UserProfile(models.Model):

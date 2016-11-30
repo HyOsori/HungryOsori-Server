@@ -2,6 +2,8 @@ from django.conf.urls import url
 from rest_framework.urlpatterns import format_suffix_patterns
 from osoriCrawlerAPI import views
 
+''' There are many things to fix url to right rules and proper type! '''
+
 urlpatterns = [
     url(r'^users/$', views.UserList.as_view()),
     url(r'^user/$', views.UserDetail.as_view()),

@@ -1,5 +1,6 @@
 from django.contrib.auth.hashers import (PBKDF2PasswordHasher, SHA1PasswordHasher,)
 
+
 class PBKDF2WrappedSHA1PasswordHasher(PBKDF2PasswordHasher):
     algorithm = 'pbkdf2_wrapped_sha1'
 
