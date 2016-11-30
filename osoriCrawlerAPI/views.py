@@ -11,8 +11,8 @@ import re, json, random
 class Auth():
     def verify_user(request):
         try:
-            user_id=request.data['user_id']
-            user_key=request.data['user_key']
+            user_id=request.GET['user_id']
+            user_key=request.GET['user_key']
         except:
             return False, -1, -1, "No 'user_id' or 'user_key'"
 
@@ -217,13 +217,13 @@ class CrawlerList(APIView):
     def get(self, request, format=None):
         user_info=Auth.verify_user(request=request)
         if not user_info[0]:
-            return ErrorResponse.error_response(-1, "Invalid user")
+            return ErrorResponse().error_response(-1, "Invalid user")
         crawlers=Crawler.objects.all()
         if crawlers != None:
             crawlerSerializer=CrawlerSerializer(crawlers, many=True)
             return_data={"message":"Success", "crawlers":crawlerSerializer.data, 'ErrorCode':0}
             return Response(return_data)
-        return ErrorResponse.error_response(-100, 'No crawler list')
+        return ErrorResponse().error_response(-100, 'No crawler list')
 
     def post(self, request, format=None):
         crawlerSerializer=CrawlerSerializer(data=request.data)
