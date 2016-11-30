@@ -34,38 +34,60 @@ class Auth():
         user.save()
         return HttpResponse("Authenticated")
 
-class ErrorResponse():
-    def error_response(ErrorCode, message):
-        data={"message":message, "ErrorCode":ErrorCode}
-        return Response(data)
-
-class ForgetPassword(APIView):
+class Password():
     def make_temp_password():
-        Strings=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','q','r','s',
-                 't','u','v','w','x','y','z','0','1','2','3','4','5','6','7','8','9','0']
-        password=''
-        for i in range(0,8):
-            password=password+Strings[random.randrange(0,35)]
+        Strings = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'q', 'r', 's',
+                   't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
+        password = ''
+        for i in range(0, 8):
+            password = password + Strings[random.randrange(0, 35)]
         return password
 
-    def send_temp_password(self, user_id):
-        user_id=request.data['user_id']
+    def post(self, request):
+        user_id = request.data['user_id']
         temp_password = ForgetPassword.make_temp_password()
         try:
-            user= UserProfile.objects.get(user_id=user_id)
+            user = UserProfile.objects.get(user_id=user_id)
         except:
             return ErrorResponse.error_response(-1, "Invalid user")
 
         send_mail(
             '임시 비밀번호 입니다.',
-            temp_password+' 로그인하여 비밀번호를 변경하세요',
+            temp_password + ' 로그인하여 비밀번호를 변경하세요',
             'bees1114@naver.com',
             [user_id],
         )
-        user.password=make_password(password=temp_password, salt=None, hasher='default')
+        user.password = make_password(password=temp_password, salt=None, hasher='default')
         user.save()
-        data={"message":"Temp password sent", "ErrorCode":0}
+        data = {"message": "Temp password sent", "ErrorCode": 0}
         return HttpResponse(data)
+
+    def put(self, request):
+        try:
+            user_id=request.data['user_id']
+        except:
+            return ErrorResponse.error_response(-1, "No user_id")
+        try:
+            password=request.data['password']
+        except:
+            return ErrorResponse.error_response(-1, "No current password")
+        try:
+            new_password=request.data['new_password']
+        except:
+            return ErrorResponse.error_response(-1, "No new_password")
+        user=UserProfile.objects.get(user_id=user_id)
+        chk_password=check_password(password=password, encoded=user.password)
+        if chk_password is False:
+            return ErrorResponse.error_response(-100, "Not correct current password")
+        user.password=make_password(password=new_password, salt=None, hasher='default')
+        user.save()
+        return_data={"message":"success","ErrorCode":0}
+        return Response(return_data)
+
+class ErrorResponse():
+    def error_response(ErrorCode, message):
+        data={"message":message, "ErrorCode":ErrorCode}
+        return Response(data)
 
 class UserList(APIView):
     def make_auth_key(self):
@@ -340,76 +362,19 @@ class PushTokenDetail(APIView):
             return PushToken.objects.get(user_id=id)
         except PushToken.DoesNotExist:
             return False
-    def get(self, request, id, format=None):
-        token = self.get_object(id=id)
+    def get(self, request, format=None):
+        token = self.get_object(id=request.GET['user_id'])
         if token != None:
             tokenSerializer=PushTokenSerializer(token)
             return Response(tokenSerializer.data)
         return Response("Invalid user-token", status= status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, id, format=None):
-        token = self.get_object(id)
+    def delete(self, request, format=None):
+        token = self.get_object(request.GET['user_id'])
         if token == False:
             return Response("Invalid user-token", status=status.HTTP_400_BAD_REQUEST)
         token.delete()
         return Response(token.user_id+ "`s " +token.token+ " deleted")
-
-class Login(APIView):
-    def post(self, request):
-        try:
-            user_id=request.data['user_id']
-        except Exception as e:
-            return_data={'message':'No user_id', 'ErrorCode':-1}
-            return Response(return_data)
-        try:
-            password=request.data['password']
-        except Exception as e:
-            return_data={'message':'No password', 'ErrorCode':-1}
-            return Response(return_data)
-        try:
-            user_key = request.session['user_key']
-        except:
-            user_key = 'asdf'
-
-        user=self.authenticate(user_id=user_id, password=password)
-        if UserProfile.objects.get(user_id=user_id).is_authenticated() is not True:
-            return_data={'message':'Need authentication', 'ErrorCode':-300}
-            return Response(return_data)
-        if user is -1:
-            return_data={'message':'Invalid user', 'ErrorCode':-100}
-            return Response(return_data)
-        elif user is -2:
-            return_data={'message':'Invalid password', 'ErrorCode':-200}
-            return Response(return_data)
-
-        else:
-            request.session['user_key'] = user_key
-            request.session['user_id'] = user_id
-            data = {'user_key':user_key, 'user_id':user_id, 'message':"Login success", 'ErrorCode':0}
-            return Response(data)
-
-class ChangePassword(APIView):
-    def post(self, request):
-        try:
-            user_id=request.data['user_id']
-        except:
-            return ErrorResponse.error_response(-1, "No user_id")
-        try:
-            password=request.data['password']
-        except:
-            return ErrorResponse.error_response(-1, "No current password")
-        try:
-            new_password=request.data['new_password']
-        except:
-            return ErrorResponse.error_response(-1, "No new_password")
-        user=UserProfile.objects.get(user_id=user_id)
-        chk_password=check_password(password=password, encoded=user.password)
-        if chk_password is False:
-            return ErrorResponse.error_response(-100, "Not correct current password")
-        user.password=make_password(password=new_password, salt=None, hasher='default')
-        user.save()
-        return_data={"message":"success","ErrorCode":0}
-        return Response(return_data)
 
 class SubscriberPushToken(APIView):
     def post(self, request):
