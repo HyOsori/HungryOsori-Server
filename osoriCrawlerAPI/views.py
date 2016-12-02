@@ -11,8 +11,8 @@ import re, json, random
 class Auth():
     def verify_user(request):
         try:
-            user_id=request.GET['user_id']
-            user_key=request.GET['user_key']
+            user_id=request.GET['user_id'] #
+            user_key=request.GET['user_key'] #
         except:
             return False, -1, -1, "No 'user_id' or 'user_key'"
 
@@ -27,15 +27,18 @@ class Auth():
     def email_auth(request, auth):
         result = {}
         try:
-            user=UserProfile.objects.get(is_auth=auth)
+            user=UserProfile.objects.get(is_auth=auth) # is_auth : 권한이 있는 ID
+            # is_auth가 auth인 row를 가져온다.
         except:
             return HttpResponse("Invalid user or already authenticated")
-        user.is_auth='True'
-        user.save()
-        return HttpResponse("Authenticated")
+        user.is_auth='True' # user의 권한을 true로 변경.
+        user.save() # Django doesn’t hit the database until you explicitly call save().
+        # user의 변경 내용을 저장.
+        return HttpResponse("Authenticated") # passing strings
+        # HttpResponse will consume the iterator immediately, store its content as a string, and discard it.
 
 class Password():
-    def make_temp_password():
+    def make_temp_password(self): # 임시비밀번호 생성
         Strings = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'q', 'r', 's',
                    't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
         password = ''
@@ -43,26 +46,27 @@ class Password():
             password = password + Strings[random.randrange(0, 35)]
         return password
 
-    def post(self, request):
+    def post(self, request): # 임시비밀번호 발송
         user_id = request.data['user_id']
-        temp_password = ForgetPassword.make_temp_password()
+        temp_password = Password.make_temp_password()
         try:
             user = UserProfile.objects.get(user_id=user_id)
         except:
             return ErrorResponse.error_response(-1, "Invalid user")
 
-        send_mail(
-            '임시 비밀번호 입니다.',
-            temp_password + ' 로그인하여 비밀번호를 변경하세요',
-            'bees1114@naver.com',
-            [user_id],
+        send_mail( # from django.core.mail import send_mail
+            '임시 비밀번호 입니다.', # subject
+            temp_password + ' 로그인하여 비밀번호를 변경하세요', # message
+            'bees1114@naver.com', # from_email
+            [user_id], # recipient_list
         )
         user.password = make_password(password=temp_password, salt=None, hasher='default')
+        # Creates a hashed password in the format used by this application.
         user.save()
         data = {"message": "Temp password sent", "ErrorCode": 0}
         return HttpResponse(data)
 
-    def put(self, request):
+    def put(self, request): #
         try:
             user_id=request.data['user_id']
         except:
