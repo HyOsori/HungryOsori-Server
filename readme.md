@@ -38,7 +38,7 @@ name|사용자 이름
 |user_id|사용자 아이디|
 |user_key|서버에서 발급하는 키, user_key없이 request를 날리면, 서버에서 발급|
 |password|비밀번호|
-|token|Pushtoken|
+|push_token|Pushtoken|
 
 * Response
 {
@@ -57,7 +57,7 @@ name|사용자 이름
 |-200|비밀번호 오류|
 |-300|인증 필요|	
 
-5. 크롤러 전체 목록
+4. 크롤러 전체 목록
 -----------------------------
 * url: /crawlers/
 
@@ -82,9 +82,9 @@ name|사용자 이름
 |0|성공|
 |-100|크롤러가 한개도 없음|
 
-6. 유저가 구독중인 크롤러 목록
+5. 유저가 구독중인 크롤러 목록
 -----------------------------
-* url:/subscriptions/item/ 
+* url:/subscription/ 
 
 |Data|Description|
 ---|---
@@ -110,7 +110,7 @@ name|사용자 이름
 |-100|유효하지 않은 유저|
 |-200|구독하고 있는 크롤러 없음|
 
-7. 유저가 구독하려는 크롤러 추가
+6. 유저가 구독하려는 크롤러 추가
 -----------------------------
 * url: /subscriptions/
 
@@ -134,9 +134,9 @@ name|사용자 이름
 |-100|유효하지 않은 유저|
 |-1|에러|
 
-8. 유저가 구독하고 있는 크롤러 제거
+7. 유저가 구독하고 있는 크롤러 제거
 -----------------------------
-* url: /subscriptions/item/delete/
+* url: /subscription/ 이 url에 delete 메소드 이용
 
 |Data|Description|
 ---|---
@@ -184,8 +184,8 @@ name|사용자 이름
 
 10. 패스워드 변경
 -----------------------------
-* url:/password_change/ 
-
+* url:/password/ 
+put method를 사용하여 user_id와 password, new_password를 보낸다.
 |Data|Description|
 ---|---
 |user_id|사용자아이디|
@@ -207,7 +207,7 @@ name|사용자 이름
 
 11. 비밀번호 찾기
 -------------------------
-* url: /send_temp_password/  
+* url: password/ 
 임시로 비밀번호를 설정해두고 이를 이메일로 보내주는 형태 포스트 방식으로 user_id를 보낸다
 
 |Data|Description|

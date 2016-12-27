@@ -9,7 +9,7 @@ from django.http import HttpResponse
 import re, json, random
 
 class Auth():
-    def verify_user(request):
+    def verify_user(self, request):
         try:
             user_id=request.GET['user_id'] #
             user_key=request.GET['user_key'] #
@@ -24,7 +24,7 @@ class Auth():
 
         return True, user_id, user_key
 
-    def email_auth(request, auth):
+    def email_auth(self, request, auth):
         result = {}
         try:
             user=UserProfile.objects.get(is_auth=auth) # is_auth : 권한이 있는 ID
@@ -89,7 +89,7 @@ class Password():
         return Response(return_data)
 
 class ErrorResponse():
-    def error_response(ErrorCode, message):
+    def error_response(self, ErrorCode, message):
         data={"message":message, "ErrorCode":ErrorCode}
         return Response(data)
 
@@ -219,7 +219,7 @@ class UserDetail(APIView):
         return Response(return_data)
 
     def put(self, request, format=None):
-        user_id=request.GET.get('user_id')
+        user_id=request.GET['user_id']
         user = self.get_object(id=user_id)
         if user == False:
             return Response("Invalid user", status=status.HTTP_400_BAD_REQUEST)
@@ -232,9 +232,9 @@ class UserDetail(APIView):
         return Response(userSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, format=None):
-        user_id=request.GET.get('user_id')
+        user_id=request.GET['user_id']
         user=self.get_object(id=user_id)
-        if user == False:
+        if user is False:
             return Response("Invalid user", status=status.HTTP_400_BAD_REQUEST)
         user.delete()
         return Response(user_id + " deleted")
@@ -401,3 +401,4 @@ class SubscriberPushToken(APIView):
         #    return Response(data)
         data={'return_code':0, 'data':total}
         return Response(data)
+
