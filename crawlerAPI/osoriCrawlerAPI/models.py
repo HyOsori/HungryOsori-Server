@@ -38,6 +38,7 @@ class Subscription(models.Model):
     latest_pushtime = models.DateField()
     class Meta:
         ordering=('user_id', 'crawler_id',)
+        unique_together = (('user_id', 'crawler_id'),)
 
 '''Models for user and who`s device token'''
 class PushToken(models.Model):
@@ -45,3 +46,4 @@ class PushToken(models.Model):
     push_token = models.CharField(max_length=300)
     class Meta:
         ordering=('user_id',)
+        unique_together = (('user_id', 'push_token'),)
