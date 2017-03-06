@@ -6,7 +6,7 @@ from django.contrib.auth.hashers import make_password
 
 '''Models for user profile'''
 class UserProfile(models.Model):
-    user_id = models.CharField(primary_key=True, max_length=100)
+    user_id = models.EmailField(primary_key=True)
     name = models.CharField(max_length=100)
     password = models.CharField(max_length=100)
     is_auth = models.CharField(max_length=100, default='False')
@@ -37,10 +37,9 @@ class UserProfile(models.Model):
 class Crawler(models.Model):
     crawler_id=models.CharField(max_length=100, primary_key= True)
     thumbnail_url = models.CharField(max_length=100)
-    link_url = models.CharField(max_length=100)
     title = models.CharField(max_length=100)
     description = models.CharField(max_length=100)
-    created = models.DateField(auto_now=True)
+    created = models.DateField(auto_now_add=True)
     
     def from_db_value(self, value, expression, connection, context):
         if value is None:
@@ -82,7 +81,7 @@ class Subscription(models.Model):
 '''Models for user and who`s device token'''
 class PushToken(models.Model):
     user_id = models.CharField(max_length=100)
-    push_token = models.CharField(max_length=100)
+    push_token = models.CharField(max_length=300)
     def from_db_value(self, value, expression, connection, context):
         if value is None:
             return value

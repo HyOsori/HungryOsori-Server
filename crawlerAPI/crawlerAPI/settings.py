@@ -18,7 +18,12 @@ TEMPLATES_DIRS = (os.path.join(BASE_DIR, 'templates'),)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
+import sys
+DJANGO_PROJECT_PATH='/home/ubuntu/django/crawlerAPI'
+if DJANGO_PROJECT_PATH not in sys.path:
+    sys.path.append(DJANGO_PROJECT_PATH)
 
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "crawlerAPI.settings")
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '5b=_xoejiw$g$nmiwx52b3-u0oi#bgfjkkq1%_f7u!-9hf43$5'
 
@@ -44,7 +49,7 @@ INSTALLED_APPS = [
     'rest_framework_social_oauth2',
 ]
 
-MIDDLEWARE = [
+MIDDLEWARE_CLASSES = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -84,7 +89,7 @@ WSGI_APPLICATION = 'crawlerAPI.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'crawler',
+        'NAME': 'crawlerDB',
         'USER': 'bees1114',
         'PASSWORD': '',
         'HOST': '',
@@ -163,7 +168,7 @@ AUTHENTICATION_BACKENDS = (
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
     'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
-    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    #'django.contrib.auth.hashers.Argon2PasswordHasher',
     'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
     'django.contrib.auth.hashers.BCryptPasswordHasher',
 ]

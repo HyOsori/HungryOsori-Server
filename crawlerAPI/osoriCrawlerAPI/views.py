@@ -5,89 +5,84 @@ from osoriCrawlerAPI.models import UserProfile, Crawler, Subscription, PushToken
 from osoriCrawlerAPI.serializers import UserProfileSerializer, CrawlerSerializer, SubscriptionSerializer, PushTokenSerializer
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.mail import send_mail
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpRequest
 import re, json, random
 
 class Auth():
     def verify_user(self, request, user_id, user_key):
         try:
             if request.session['user_id'] != user_id or request.session['user_key']!=user_key:
-                return_data = {'result': 0, 'message':'Invalid session'}
+                return_data = {'result':0, 'message':'Invalid session'}
                 return return_data
         except:
             return_data = {'result': 0, 'message':'No have key in session'}
             return return_data
-        return_data ={'result':1, 'message':'success', 'user_id':user_id, 'user_key':user_key}
+        return_data = {'result':1, 'user_id':user_id, 'user_key':user_key}
         return return_data
 
     def email_auth(self, request, auth):
         result = {}
         try:
-            user=UserProfile.objects.get(is_auth=auth) # is_auth : 권한이 있는 ID
-            # is_auth가 auth인 row를 가져온다.
+            user=UserProfile.objects.get(is_auth=auth)
         except:
             return HttpResponse("Invalid user or already authenticated")
-        user.is_auth='True' # user의 권한을 true로 변경.
-        user.save() # Django doesn’t hit the database until you explicitly call save().
-        # user의 변경 내용을 저장.
-        return HttpResponse("Authenticated") # passing strings
-        # HttpResponse will consume the iterator immediately, store its content as a string, and discard it.
+        user.is_auth='True'
+        user.save()
+        return HttpResponse("Authenticated")
 
-class Password():
-    def make_temp_password(self): # 임시비밀번호 생성
-        Strings = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'q', 'r', 's',
-                   't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
-        password = ''
-        for i in range(0, 8):
-            password = password + Strings[random.randrange(0, 35)]
+class ErrorResponse():
+    def error_response(self, ErrorCode, message):
+        data={"message":message, "ErrorCode":ErrorCode}
+        return Response(data)
+
+class Password(APIView):
+    def make_temp_password(self):
+        Strings=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','q','r','s','t','u','v','w','x','y','z','0','1','2','3','4','5','6','7','8','9','0']
+        password=''
+        for i in range(0,8):
+            password=password+Strings[random.randrange(0,35)]
         return password
 
-    def post(self, request): # 임시비밀번호 발송
+    def post(self, request):
         user_id = request.data['user_id']
         temp_password = Password().make_temp_password()
         try:
-            user = UserProfile.objects.get(user_id=user_id)
+            user = UserProfile.objects.get(user_id=user_id)	
         except:
             return ErrorResponse().error_response(-1, "Invalid user")
-
-        send_mail( # from django.core.mail import send_mail
-            '임시 비밀번호 입니다.', # subject
-            temp_password + ' 로그인하여 비밀번호를 변경하세요', # message
-            'bees1114@naver.com', # from_email
-            [user_id], # recipient_list
+     
+        send_mail(
+            'temp password',
+            temp_password+ ' login and modify your password.',
+            'bees1114@naver.com',
+            [user_id],
         )
         user.password = make_password(password=temp_password, salt=None, hasher='default')
-        # Creates a hashed password in the format used by this application.
         user.save()
-        data = {"message": "Temp password sent", "ErrorCode": 0}
+        data = {'message':'Temp password sent', 'ErrorCode': 0}
         return HttpResponse(data)
 
-    def put(self, request): #
+    def put(self, request):
         try:
             user_id=request.data['user_id']
         except:
-            return ErrorResponse().error_response(-1, "No user_id")
+            return ErrorResponse().error_response(-1, "No uesr_id")
         try:
-            password=request.data['password']
+            password = request.data['password']
         except:
             return ErrorResponse().error_response(-1, "No current password")
         try:
             new_password=request.data['new_password']
         except:
             return ErrorResponse().error_response(-1, "No new_password")
-        user=UserProfile.objects.get(user_id=user_id)
-        chk_password=check_password(password=password, encoded=user.password)
+        user = UserProfile.objects.get(user_id = user_id)
+        chk_password=check_password(password = password, encoded = user.password)
         if chk_password is False:
             return ErrorResponse().error_response(-100, "Not correct current password")
-        user.password=make_password(password=new_password, salt=None, hasher='default')
+        user.password = make_password(password = new_password, salt = None, hasher = 'default')
         user.save()
-        return_data={"message":"success","ErrorCode":0}
+        return_data = {"message":"success", "ErrorCode":0}
         return Response(return_data)
-
-class ErrorResponse():
-    def error_response(self, ErrorCode, message):
-        data={"message":message, "ErrorCode":ErrorCode}
-        return Response(data)
 
 class UserList(APIView):
     def make_auth_key(self):
@@ -109,14 +104,14 @@ class UserList(APIView):
         data = request.data
         if re.match(' /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i',
                     data['user_id']) is not None:
-            return ErrorResponse().error_response(-200, 'Invalid email address')
+            return ErrorResponse.error_response(-200, 'Invalid email address')
         exist=UserProfile.objects.filter(user_id=data['user_id'])
         if exist.count() != 0:
-            return ErrorResponse().error_response(-100, 'Already exist user_id')
+            return ErrorResponse.error_response(-100, 'Already exist user_id')
 
         password = make_password(password=data['password'], salt=None, hasher='default')
         is_auth = self.make_auth_key()
-        url = 'http://127.0.0.1:8000/email_auth/'+is_auth+'/'
+        url = 'http://52.78.113.6:8000/email_auth/'+is_auth+'/'
         user = {}
         user['user_id']=data['user_id']
         user['name']=data['name']
@@ -127,8 +122,8 @@ class UserList(APIView):
         if userSerializer.is_valid():
             userSerializer.save()
             send_mail(
-                '가입인증 메일입니다.',
-                url+' 이 페이지를 클릭하여 사용자 인증을 하세요.',
+                'Authentication mail.',
+                url+' authentication by click this urls.',
                 'bees1114@naver.com',
                 [data['user_id']],
                 fail_silently=False,
@@ -157,6 +152,12 @@ class UserDetail(APIView):
             return -2
         return user
 
+    def get_object(self, id):
+        try:
+            return UserProfile.objects.get(user_id=id)
+        except UserProfile.DoesNotExist:
+            return False
+
     def get(self, request, format=None):
         try:
             user_id = request.GET['user_id']
@@ -175,7 +176,7 @@ class UserDetail(APIView):
         try:
             token = request.GET['push_token']
         except Exception as e:
-            return_data = {'message': 'No token', 'ErrorCode': -1}
+            return_data = {'message': 'No token', 'ErrorCode':-1}
             return Response(return_data)
         try:
             UserProfile.objects.get(user_id=user_id)
@@ -196,9 +197,9 @@ class UserDetail(APIView):
         else:
             request.session['user_key'] = user_key
             request.session['user_id'] = user_id
-            user_token = {}
-            user_token['user_id'] = user_id
-            user_token['push_token'] = token
+            user_token={}
+            user_token['user_id']=user_id
+            user_token['push_token']=token
             pushTokenSerializer = PushTokenSerializer(data=user_token)
 
             if pushTokenSerializer.is_valid():
@@ -260,8 +261,7 @@ class CrawlerDetail(APIView):
             return Response(crawlerSerializer.data)
         return Response("Invalid crawler", status=status.HTTP_400_BAD_REQUEST)
 
-    def put(self, request, format=None):
-        name = request.GET['title']
+    def put(self, request, name, format=None):
         crawler=self.get_object(name)
         if crawler == False:
             return Response("Invalid crawler", status=status.HTTP_400_BAD_REQUEST)
@@ -274,7 +274,7 @@ class CrawlerDetail(APIView):
     def delete(self, request, format=None):
         crawler_id = request.GET['crawler_id']
         crawler=self.get_object(crawler_id)
-        if crawler == False:
+        if crawler is False:
             Response("Invalid crawler", status=status.HTTP_400_BAD_REQUEST)
         crawler.delete()
         return Response(crawler.title+" deleted")
@@ -286,33 +286,32 @@ class SubscriptionList(APIView):
         return Response(subscriptionSerializer.data)
 
     def post(self, request, format=None):
-        user_info=Auth().verify_user(request=request, user_id=request.data['user_id'],user_key=request.data['user_key'])
+        user_info = Auth().verify_user(request=request, user_id=request.data['user_id'], user_key=request.data['user_key'])
         if not user_info['result']:
-            return ErrorResponse.error_response(-1, user_info['message'])
+            return ErrorResponse().error_response(-1, user_info['message'])
         subscriptionsSerializer=SubscriptionSerializer(data=request.data)
         if subscriptionsSerializer.is_valid():
             subscriptionsSerializer.save()
             return_data={"message":"success", "ErrorCode":0}
             return Response(return_data)
-        return ErrorResponse.error_response(-1, "Error")
+        return ErrorResponse().error_response(-1, "Error")
 
 class SubscriptionDetail(APIView):
     def post(self, request, format=None):
-        user_info = Auth().verify_user(request=request, user_id=request.data['user_id'],
-                                       user_key=request.data['user_key'])
+        user_info = Auth().verify_user(request=request, user_id=request.data['user_id'], user_key=request.data['user_key'])
         if not user_info['result']:
             return ErrorResponse().error_response(-1, user_info['message'])
+
         user_id = request.data['user_id']
         subscription = Subscription.objects.filter(user_id=user_id)
         if subscription.count() == 0:
             return Response(-200, "No subscriptions")
-        subscriptionSerializer = SubscriptionSerializer(subscription, many = True)
+        subscriptionSerializer = SubscriptionSerializer(subscription, many=True)
         return_data={"message":'success', "subscriptions":subscriptionSerializer.data, 'ErrorCode':0}
         return Response(return_data)
 
     def delete(self, request, format=None):
-        user_info = Auth().verify_user(request=request, user_id=request.data['user_id'],
-                                       user_key=request.data['user_key'])
+        user_info = Auth().verify_user(request=request, user_id=request.data['user_id'], user_key=request.data['user_key'])
         if not user_info['result']:
             return ErrorResponse().error_response(-1, user_info['message'])
 
@@ -336,17 +335,16 @@ class PushTokenList(APIView):
         return Response(tokenSerializer.data)
 
     def post(self, request, format=None):
-        user_info = Auth().verify_user(request=request, user_id=request.data['user_id'],
-                                       user_key=request.data['user_key'])
+        user_info = Auth().verify_user(request=request, user_id=request.data['user_id'], user_key=request.data['user_key'])
         if not user_info['result']:
-            return ErrorResponse.error_response(-1, user_info['message'])
+            return ErrorResponse().error_response(-1, user_info['message'])
 
         tokenSerializer=PushTokenSerializer(data=request.data)
         if tokenSerializer.is_valid():
             tokenSerializer.save()
             return_data={"message":"success", "ErrorCode":0}
             return Response(return_data)
-        return ErrorResponse.error_response(-1, "Error")
+        return ErrorResponse().error_response(-1, "Error")
 
 class PushTokenDetail(APIView):
     def get_object(self, id):
@@ -366,7 +364,8 @@ class PushTokenDetail(APIView):
         if token == False:
             return Response("Invalid user-token", status=status.HTTP_400_BAD_REQUEST)
         token.delete()
-        return Response(token.user_id+ "`s " +token.token+ " deleted")
+        return Response(" deleted")
+
 
 class SubscriberPushToken(APIView):
     def post(self, request):
@@ -375,11 +374,17 @@ class SubscriberPushToken(APIView):
         except:
             data={'return_code':-100, 'message':'Invalid crawler_id'}
             return Response(data)
+        #data={'subscriber':subscriber[0].user_id}
+        #return Response(data)
         total=[]
         for subs in subscriber:
             push_token=PushToken.objects.filter(user_id=subs.user_id)
             for pushtoken in push_token:
                 arr = {'user_id': pushtoken.user_id, 'push_token': pushtoken.push_token}
                 total.append(arr)
+
+        #except:
+        #    data={'return_code':-200, 'message':'No subscriber'}
+        #    return Response(data)
         data={'return_code':0, 'data':total}
         return Response(data)
