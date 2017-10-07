@@ -1,0 +1,6 @@
+*.py[co]
+*.pot
+*.egg-info
+__pycache__
+migrations
+keys.py

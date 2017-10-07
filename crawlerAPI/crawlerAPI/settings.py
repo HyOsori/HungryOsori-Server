@@ -19,7 +19,7 @@ TEMPLATES_DIRS = (os.path.join(BASE_DIR, 'templates'),)
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 import sys
-DJANGO_PROJECT_PATH='/home/ubuntu/django/crawlerAPI'
+DJANGO_PROJECT_PATH='D:/git/HungryOsori-Server/crawlerAPI'
 if DJANGO_PROJECT_PATH not in sys.path:
     sys.path.append(DJANGO_PROJECT_PATH)
 
@@ -44,9 +44,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'osoriCrawlerAPI',
-    'oauth2_provider',
+    #'oauth2_provider',
     'social.apps.django_app.default',
-    'rest_framework_social_oauth2',
+    #'rest_framework_social_oauth2',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -152,18 +152,19 @@ TEMPLATE_CONTEXT_PROCESSORS = {
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         #Oauth
-        'oauth2_provider.ext.rest_framework.OAuth2Authentication',
-        'rest_framework_social_oauth2.authentication.SocialAuthentication',
+        #'oauth2_provider.ext.rest_framework.OAuth2Authentication',
+        #'rest_framework_social_oauth2.authentication.SocialAuthentication',
     )
 
 }
-
+'''
 AUTHENTICATION_BACKENDS = (
     'social.backends.facebook.FacebookAppOAuth2',
     'social.backends.facebook.FacebookOAuth2',
     'rest_framework_social_oauth2.backends.DjangoOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
+'''
 #password_hasher
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
