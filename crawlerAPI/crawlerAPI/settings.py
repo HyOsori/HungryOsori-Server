@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
-
+from . import keys
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATES_DIRS = (os.path.join(BASE_DIR, 'templates'),)
@@ -90,8 +90,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'crawlerDB',
-        'USER': 'bees1114',
-        'PASSWORD': '',
+        'USER': keys.MYSQL_ID,
+        'PASSWORD': keys.MYSQL_PASSWORD,
         'HOST': '',
         'POST': '',
     }
@@ -122,7 +122,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Seoul'
 
 USE_I18N = True
 
@@ -177,16 +177,16 @@ PASSWORD_HASHERS = [
 EMAIL_USE_TLS = True
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'beespjh@gmail.com'
-EMAIL_HOST_PASSWROD = ''
+EMAIL_HOST_USER = keys.EMAIL_HOST_USER
+EMAIL_HOST_PASSWROD = keys.EMAIL_HOST_PASSWORD
 EMAIL_PORT = 587
 
 #Oauth
 SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/'
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
 
-SOCIAL_AUTH_FACEBOOK_KEY = '693842287448856'
-SOCIAL_AUTH_FACEBOOK_SECRET = 'a923ddfe9190a21f9287f10a0f15dc66'
+SOCIAL_AUTH_FACEBOOK_KEY = keys.SOCIAL_AUTH_FACEBOOK_KEY
+SOCIAL_AUTH_FACEBOOK_SECRET = keys.SOCIAL_AUTH_FACEBOOK_SECRET
 
 SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
