@@ -1,12 +1,20 @@
 from rest_framework import status, exceptions
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authtoken.models import Token
 from osoriCrawlerAPI.models import UserProfile, Crawler, Subscription, PushToken, Session
 from osoriCrawlerAPI.serializers import UserProfileSerializer, CrawlerSerializer, SubscriptionSerializer, PushTokenSerializer
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.mail import send_mail
 from django.http import HttpResponse, HttpRequest
+from django.shortcuts import render
+
 import re, json, random
+
+def main(request):
+    return render(request, 'osoriCrawlerAPI/main.html', {})
 
 class Auth():
     def verify_user(self, request, user_id, user_key):
@@ -94,7 +102,7 @@ class UserList(APIView):
         return auth_key
 
     def get(self, request, format=None):
-        users=UserProfile.objects.all()
+        users = UserProfile.objects.all()
         if users.count() == 0:
             return Response('No users')
         userSerializer = UserProfileSerializer(users, many=True)
@@ -105,7 +113,7 @@ class UserList(APIView):
         if re.match(' /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i',
                     data['user_id']) is not None:
             return ErrorResponse.error_response(-200, 'Invalid email address')
-        exist=UserProfile.objects.filter(user_id=data['user_id'])
+        exist = UserProfile.objects.filter(user_id=data['user_id'])
         if exist.count() != 0:
             return ErrorResponse.error_response(-100, 'Already exist user_id')
 
@@ -197,7 +205,7 @@ class UserDetail(APIView):
         else:
             request.session['user_key'] = user_key
             request.session['user_id'] = user_id
-            user_token={}
+            user_token = {}
             user_token['user_id']=user_id
             user_token['push_token']=token
             pushTokenSerializer = PushTokenSerializer(data=user_token)

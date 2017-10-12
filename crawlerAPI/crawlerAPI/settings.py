@@ -43,10 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
     'osoriCrawlerAPI',
-    #'oauth2_provider',
-    'social.apps.django_app.default',
-    #'rest_framework_social_oauth2',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -78,6 +76,7 @@ TEMPLATES = [
             ],
         },
     },
+
 ]
 
 WSGI_APPLICATION = 'crawlerAPI.wsgi.application'
@@ -88,7 +87,7 @@ WSGI_APPLICATION = 'crawlerAPI.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
+        'ENGINE': 'django.db.backends.sqlite3',
         'NAME': 'crawlerDB',
         'USER': keys.MYSQL_ID,
         'PASSWORD': keys.MYSQL_PASSWORD,
@@ -154,8 +153,9 @@ REST_FRAMEWORK = {
         #Oauth
         #'oauth2_provider.ext.rest_framework.OAuth2Authentication',
         #'rest_framework_social_oauth2.authentication.SocialAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     )
-
 }
 '''
 AUTHENTICATION_BACKENDS = (
@@ -192,3 +192,5 @@ SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields':'id, name, email, age_range'
 }
+
+AUTH_USER_MODEL = 'osoriCrawlerAPI.UserProfile'
