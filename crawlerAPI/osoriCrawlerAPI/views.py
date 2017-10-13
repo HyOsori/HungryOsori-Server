@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
-from osoriCrawlerAPI.models import UserProfile, Crawler, Subscription, PushToken, Session
+from osoriCrawlerAPI.models import UserProfile, Crawler, Subscription, PushToken
 from osoriCrawlerAPI.serializers import UserProfileSerializer, CrawlerSerializer, SubscriptionSerializer, PushTokenSerializer
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.mail import send_mail
@@ -34,7 +34,7 @@ class Auth():
             user=UserProfile.objects.get(is_auth=auth)
         except:
             return HttpResponse("Invalid user or already authenticated")
-        user.is_auth='True'
+        user.is_auth = 'True'
         user.save()
         return HttpResponse("Authenticated")
 
@@ -48,7 +48,7 @@ class Password(APIView):
         Strings=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','q','r','s','t','u','v','w','x','y','z','0','1','2','3','4','5','6','7','8','9','0']
         password=''
         for i in range(0,8):
-            password=password+Strings[random.randrange(0,35)]
+            password = password+Strings[random.randrange(0,35)]
         return password
 
     def post(self, request):
@@ -110,21 +110,28 @@ class UserList(APIView):
 
     def post(self, request, format=None):
         data = request.data
+
+        #checking email address in requested data are correct email format or not
         if re.match(' /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i',
-                    data['user_id']) is not None:
+                    data['email']) is not None:
             return ErrorResponse.error_response(-200, 'Invalid email address')
-        exist = UserProfile.objects.filter(user_id=data['user_id'])
+
+        #checking email address is duplicated or not
+        exist = UserProfile.objects.filter(email=data['email'])
         if exist.count() != 0:
             return ErrorResponse.error_response(-100, 'Already exist user_id')
 
         password = make_password(password=data['password'], salt=None, hasher='default')
+        #make email authenticate key
         is_auth = self.make_auth_key()
+
+        #send confirm email
         url = 'http://52.78.113.6:8000/email_auth/'+is_auth+'/'
         user = {}
-        user['user_id']=data['user_id']
-        user['name']=data['name']
-        user['password']=password
-        user['is_auth']=is_auth
+        user['email'] = data['email']
+        user['name'] = data['name']
+        user['password'] = password
+        user['is_auth'] = is_auth
         userSerializer = UserProfileSerializer(data=user)
 
         if userSerializer.is_valid():
@@ -133,12 +140,12 @@ class UserList(APIView):
                 'Authentication mail.',
                 url+' authentication by click this urls.',
                 'bees1114@naver.com',
-                [data['user_id']],
+                [data['email']],
                 fail_silently=False,
             )
-            return_data={'message':'Success', 'ErrorCode':0}
+            return_data = {'message': 'Success', 'ErrorCode': 0}
             return Response(return_data)
-        return ErrorResponse().error_response(-1, 'Error')
+        return ErrorResponse().error_response(-1, 'Error at the end')
 
 class UserDetail(APIView):
     def make_user_key(self):
@@ -166,25 +173,21 @@ class UserDetail(APIView):
         except UserProfile.DoesNotExist:
             return False
 
-    def get(self, request, format=None):
+    def post(self, request, format=None):
         try:
-            user_id = request.GET['user_id']
-        except Exception as e:
+            email = request.GET['email']
+        except Exception:
             return_data = {'message': 'No user_id', 'ErrorCode': -1}
             return Response(return_data)
         try:
             password = request.GET['password']
-        except Exception as e:
+        except Exception:
             return_data = {'message': 'No password', 'ErrorCode': -1}
             return Response(return_data)
         try:
-            user_key = request.session['user_key']
-        except:
-            user_key = 'asdf'
-        try:
             token = request.GET['push_token']
-        except Exception as e:
-            return_data = {'message': 'No token', 'ErrorCode':-1}
+        except Exception:
+            return_data = {'message': 'No push token', 'ErrorCode':-1}
             return Response(return_data)
         try:
             UserProfile.objects.get(user_id=user_id)
@@ -218,7 +221,7 @@ class UserDetail(APIView):
         return Response(return_data)
 
     def put(self, request, format=None):
-        user_id=request.GET['user_id']
+        user_id = request.GET['user_id']
         user = self.get_object(id=user_id)
         if user == False:
             return Response("Invalid user", status=status.HTTP_400_BAD_REQUEST)

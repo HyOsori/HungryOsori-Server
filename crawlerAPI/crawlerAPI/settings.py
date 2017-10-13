@@ -25,7 +25,7 @@ if DJANGO_PROJECT_PATH not in sys.path:
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "crawlerAPI.settings")
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '5b=_xoejiw$g$nmiwx52b3-u0oi#bgfjkkq1%_f7u!-9hf43$5'
+SECRET_KEY = keys.SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -149,12 +149,16 @@ TEMPLATE_CONTEXT_PROCESSORS = {
 }
 
 REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated'
+    ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         #Oauth
         #'oauth2_provider.ext.rest_framework.OAuth2Authentication',
         #'rest_framework_social_oauth2.authentication.SocialAuthentication',
         'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
     )
 }
 '''

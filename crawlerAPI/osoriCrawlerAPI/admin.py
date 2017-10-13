@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 from .forms import UserProfileCreationForm, UserProfileChangeForm
-from .models import UserProfile
+from .models import UserProfile, Crawler
 
 class UserProfileAdmin(BaseUserAdmin):
     # The forms to add and change user instances
@@ -35,3 +35,4 @@ class UserProfileAdmin(BaseUserAdmin):
 
 # Now register the new UserAdmin...
 admin.site.register(UserProfile, UserProfileAdmin)
+admin.site.register(Crawler)
