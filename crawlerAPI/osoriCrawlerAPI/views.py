@@ -19,13 +19,13 @@ def main(request):
 class Auth():
     def verify_user(self, request, user_id, user_key):
         try:
-            if request.session['user_id'] != user_id or request.session['user_key']!=user_key:
-                return_data = {'result':0, 'message':'Invalid session'}
+            if request.session['user_id'] != user_id or request.session['user_key'] != user_key:
+                return_data = {'result': 0, 'message': 'Invalid session'}
                 return return_data
         except:
-            return_data = {'result': 0, 'message':'No have key in session'}
+            return_data = {'result': 0, 'message': 'No have key in session'}
             return return_data
-        return_data = {'result':1, 'user_id':user_id, 'user_key':user_key}
+        return_data = {'result': 1, 'user_id': user_id, 'user_key': user_key}
         return return_data
 
     def email_auth(self, request, auth):
