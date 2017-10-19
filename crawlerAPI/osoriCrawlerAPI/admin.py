@@ -37,4 +37,4 @@ class UserProfileAdmin(BaseUserAdmin):
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(Crawler)
 
-#admin.site.unregister(Groups)
+#admin.site.unregister(Group)

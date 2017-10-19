@@ -2,6 +2,7 @@ from django.conf.urls import url
 from rest_framework.urlpatterns import format_suffix_patterns
 from osoriCrawlerAPI import views
 from django.contrib import admin
+from rest_framework.authtoken import views as auth_token_views
 
 ''' There are many things to fix url to right rules and proper type! '''
 
@@ -18,7 +19,8 @@ urlpatterns = [
     url(r'^pushtoken/$', views.PushTokenDetail.as_view()),
     url(r'^email_auth/(?P<auth>.+)/$', views.Auth.email_auth),
     url(r'^password/$', views.Password.as_view()),
-    url(r'^subscribers_pushtoken/$', views.SubscriberPushToken.as_view())
+    url(r'^subscribers_pushtoken/$', views.SubscriberPushToken.as_view()),
+
 
 ]
 

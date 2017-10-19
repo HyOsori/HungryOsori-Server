@@ -1,7 +1,7 @@
 from rest_framework import status, exceptions
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.authentication import TokenAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from osoriCrawlerAPI.models import UserProfile, Crawler, Subscription, PushToken
@@ -157,9 +157,9 @@ class UserDetail(APIView):
             user_key = user_key + Strings[random.randrange(0, 35)]
         return user_key
 
-    def authenticate(self, user_id, password):
+    def authenticate(self, email, password):
         try:
-            user = UserProfile.objects.get(user_id=user_id)
+            user = UserProfile.objects.get(email=email)
         except:
             return -1
         chk_password = check_password(password=password, encoded=user.password)
@@ -175,47 +175,46 @@ class UserDetail(APIView):
 
     def post(self, request, format=None):
         try:
-            email = request.GET['email']
+            email = request.data['email']
         except Exception:
-            return_data = {'message': 'No user_id', 'ErrorCode': -1}
+            return_data = {'message': 'No email', 'ErrorCode': -1}
             return Response(return_data)
         try:
-            password = request.GET['password']
+            password = request.data['password']
         except Exception:
             return_data = {'message': 'No password', 'ErrorCode': -1}
             return Response(return_data)
         try:
-            token = request.GET['push_token']
+            push_token = request.data['push_token']
         except Exception:
-            return_data = {'message': 'No push token', 'ErrorCode':-1}
+            return_data = {'message': 'No push token', 'ErrorCode': -1}
             return Response(return_data)
         try:
-            UserProfile.objects.get(user_id=user_id)
-        except:
+            UserProfile.objects.get(email=email)
+        except :
             return_data = {'message': 'Invalid user', 'ErrorCode': -100}
             return Response(return_data)
-        user = self.authenticate(user_id=user_id, password=password)
-        if UserProfile.objects.get(user_id=user_id).is_authenticated() is not True:
+        if UserProfile.objects.get(email=email).is_email_authenticated() is not True:
             return_data = {'message': 'Need authentication', 'ErrorCode': -300}
             return Response(return_data)
+
+        user = self.authenticate(email=email, password=password)
         if user is -1:
             return_data = {'message': 'Invalid user', 'ErrorCode': -100}
             return Response(return_data)
         elif user is -2:
             return_data = {'message': 'Invalid password', 'ErrorCode': -200}
             return Response(return_data)
-
         else:
-            request.session['user_key'] = user_key
-            request.session['user_id'] = user_id
-            user_token = {}
-            user_token['user_id']=user_id
-            user_token['push_token']=token
+            user_token = dict()
+            user_token['owner'] = user
+            user_token['push_token'] = push_token
             pushTokenSerializer = PushTokenSerializer(data=user_token)
 
+            token, created = Token.objects.get_or_create(user=user)
             if pushTokenSerializer.is_valid():
                 pushTokenSerializer.save()
-            data = {'user_key': user_key, 'user_id': user_id, 'message': "Login success", 'ErrorCode': 0}
+            data = {'token': token.key, 'email': email, 'message': "Login success", 'ErrorCode': 0}
             return Response(data)
 
         return Response(return_data)

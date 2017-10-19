@@ -29,7 +29,7 @@ class UserManager(BaseUserManager):
 #Models for user profile
 class UserProfile(AbstractBaseUser, models.Model):
     email = models.EmailField(verbose_name='email address', primary_key=True, max_length=100)
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100)
     password = models.CharField(max_length=100)
     is_auth = models.CharField(max_length=100, default='False')
     is_active = models.BooleanField(default=True)
@@ -41,13 +41,13 @@ class UserProfile(AbstractBaseUser, models.Model):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name', 'password']
-    '''
-    def is_authenticated(self):
+
+    def is_email_authenticated(self):
         if self.is_auth is 'False':
             return False
         else:
             return True
-    '''
+
     def from_db_value(self, value, expression, connection, context):
         if value is None:
             return value
@@ -61,7 +61,7 @@ class UserProfile(AbstractBaseUser, models.Model):
         return UserProfile(value)
 
     def __str__(self):
-        return self.name
+        return self.email
 
     def get_full_name(self):
         # The user is identified by their email address
