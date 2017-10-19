@@ -93,6 +93,8 @@ class Password(APIView):
         return Response(return_data)
 
 class UserList(APIView):
+    permission_classes = ()
+
     def make_auth_key(self):
         auth_key=''
         Strings = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'q', 'r', 's',
