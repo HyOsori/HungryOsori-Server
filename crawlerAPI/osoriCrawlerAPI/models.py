@@ -27,7 +27,7 @@ class UserManager(BaseUserManager):
         return user
 
 #Models for user profile
-class UserProfile(AbstractBaseUser):
+class UserProfile(AbstractBaseUser, models.Model):
     email = models.EmailField(verbose_name='email address', primary_key=True, max_length=100)
     name = models.CharField(max_length=100, unique=True)
     password = models.CharField(max_length=100)
@@ -37,7 +37,7 @@ class UserProfile(AbstractBaseUser):
     created = models.DateField(auto_now_add=True)
     last_login = models.DateField(auto_now=True)
 
-    object = UserManager()
+    objects = UserManager()
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name', 'password']
@@ -121,7 +121,7 @@ class Crawler(models.Model):
 
 '''Models for Information of who subscript which crawlers'''
 class Subscription(models.Model):
-    subscriber = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    subscriber = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     crawler = models.ForeignKey(Crawler, on_delete=models.CASCADE)
     latest_pushtime = models.DateField(auto_now_add=True)
 
@@ -143,7 +143,7 @@ class Subscription(models.Model):
 
 '''Models for user and who`s device token'''
 class PushToken(models.Model):
-    owner = models.ForeignKey(UserProfile, on_delete=models.CASCADE,)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,)
     push_token = models.CharField(max_length=100)
     def from_db_value(self, value, expression, connection, context):
         if value is None:
@@ -158,5 +158,5 @@ class PushToken(models.Model):
         return PushToken(value)
     
     class Meta:
-        ordering=('owner',)
+        ordering = ('owner',)
         unique_together = (('owner', 'push_token'),)

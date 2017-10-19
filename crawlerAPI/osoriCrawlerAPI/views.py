@@ -39,8 +39,8 @@ class Auth():
         return HttpResponse("Authenticated")
 
 class ErrorResponse():
-    def error_response(self, ErrorCode, message):
-        data={"message":message, "ErrorCode":ErrorCode}
+    def error_response(ErrorCode, message):
+        data = {"message": message, "ErrorCode": ErrorCode}
         return Response(data)
 
 class Password(APIView):
@@ -61,13 +61,13 @@ class Password(APIView):
      
         send_mail(
             'temp password',
-            temp_password+ ' login and modify your password.',
+            temp_password + ' login and modify your password.',
             'bees1114@naver.com',
             [user_id],
         )
         user.password = make_password(password=temp_password, salt=None, hasher='default')
         user.save()
-        data = {'message':'Temp password sent', 'ErrorCode': 0}
+        data = {'message': 'Temp password sent', 'ErrorCode': 0}
         return HttpResponse(data)
 
     def put(self, request):
@@ -84,7 +84,7 @@ class Password(APIView):
         except:
             return ErrorResponse().error_response(-1, "No new_password")
         user = UserProfile.objects.get(user_id = user_id)
-        chk_password=check_password(password = password, encoded = user.password)
+        chk_password = check_password(password = password, encoded = user.password)
         if chk_password is False:
             return ErrorResponse().error_response(-100, "Not correct current password")
         user.password = make_password(password = new_password, salt = None, hasher = 'default')
@@ -139,7 +139,7 @@ class UserList(APIView):
             send_mail(
                 'Authentication mail.',
                 url+' authentication by click this urls.',
-                'bees1114@naver.com',
+                'beespjh@gmail.com',
                 [data['email']],
                 fail_silently=False,
             )
@@ -167,9 +167,9 @@ class UserDetail(APIView):
             return -2
         return user
 
-    def get_object(self, id):
+    def get_object(self, email):
         try:
-            return UserProfile.objects.get(user_id=id)
+            return UserProfile.objects.get(email=email)
         except UserProfile.DoesNotExist:
             return False
 
@@ -234,16 +234,16 @@ class UserDetail(APIView):
         return Response(userSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, format=None):
-        user_id=request.GET['user_id']
-        user=self.get_object(id=user_id)
+        email = request.GET['email']
+        user = self.get_object(email=email)
         if user is False:
             return Response("Invalid user", status=status.HTTP_400_BAD_REQUEST)
         user.delete()
-        return Response(user_id + " deleted")
+        return Response(email + " deleted")
 
 class CrawlerList(APIView):
     def get(self, request, format=None):
-        crawlers=Crawler.objects.all()
+        crawlers = Crawler.objects.all()
         if crawlers != None:
             crawlerSerializer=CrawlerSerializer(crawlers, many=True)
             return_data={"message":"Success", "crawlers":crawlerSerializer.data, 'ErrorCode':0}
@@ -381,15 +381,15 @@ class PushTokenDetail(APIView):
 class SubscriberPushToken(APIView):
     def post(self, request):
         try:
-            subscriber=Subscription.objects.filter(crawler_id=request.data['crawler_id'])
+            subscriber = Subscription.objects.filter(crawler_id=request.data['crawler_id'])
         except:
-            data={'return_code':-100, 'message':'Invalid crawler_id'}
+            data={'return_code': -100, 'message':'Invalid crawler_id'}
             return Response(data)
         #data={'subscriber':subscriber[0].user_id}
         #return Response(data)
-        total=[]
+        total = []
         for subs in subscriber:
-            push_token=PushToken.objects.filter(user_id=subs.user_id)
+            push_token = PushToken.objects.filter(user_id=subs.user_id)
             for pushtoken in push_token:
                 arr = {'user_id': pushtoken.user_id, 'push_token': pushtoken.push_token}
                 total.append(arr)
@@ -397,5 +397,5 @@ class SubscriberPushToken(APIView):
         #except:
         #    data={'return_code':-200, 'message':'No subscriber'}
         #    return Response(data)
-        data={'return_code':0, 'data':total}
+        data = {'return_code': 0, 'data': total}
         return Response(data)

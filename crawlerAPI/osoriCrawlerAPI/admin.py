@@ -36,3 +36,5 @@ class UserProfileAdmin(BaseUserAdmin):
 # Now register the new UserAdmin...
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(Crawler)
+
+#admin.site.unregister(Groups)

@@ -5,7 +5,7 @@ from osoriCrawlerAPI.models import UserProfile, Crawler, Subscription, PushToken
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = ('user_id', 'name', 'password', 'is_auth','created', 'last_login')
+        fields = ('email', 'name', 'password', 'is_auth', 'is_active', 'is_admin', 'created', 'last_login')
 
 class CrawlerSerializer(serializers.ModelSerializer):
     class Meta:

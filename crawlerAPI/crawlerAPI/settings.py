@@ -30,7 +30,7 @@ SECRET_KEY = keys.SECRET_KEY
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['211.249.63.229',]
 
 
 # Application definition
@@ -150,7 +150,7 @@ TEMPLATE_CONTEXT_PROCESSORS = {
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated'
+        'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         #Oauth
@@ -182,7 +182,7 @@ EMAIL_USE_TLS = True
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = keys.EMAIL_HOST_USER
-EMAIL_HOST_PASSWROD = keys.EMAIL_HOST_PASSWORD
+EMAIL_HOST_PASSWORD = keys.EMAIL_HOST_PASSWORD
 EMAIL_PORT = 587
 
 #Oauth
@@ -194,7 +194,7 @@ SOCIAL_AUTH_FACEBOOK_SECRET = keys.SOCIAL_AUTH_FACEBOOK_SECRET
 
 SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
-    'fields':'id, name, email, age_range'
+    'fields': 'id, name, email, age_range'
 }
 
 AUTH_USER_MODEL = 'osoriCrawlerAPI.UserProfile'
