@@ -9,7 +9,8 @@ from rest_framework.authtoken import views as auth_token_views
 urlpatterns = [
     url(r'^$', views.main, name='main'),
     url(r'^admin/', admin.site.urls, name='admin'),
-    url(r'^users/$', views.UserList.as_view(), name='users'),
+    url(r'^signup/$', views.SignUp.as_view(), name='signup'),
+    url(r'^signin/$', views.SignIn.as_view(), name='signin'),
     url(r'^user/$', views.UserDetail.as_view(), name='user'),
     url(r'^crawlers/$', views.CrawlerList.as_view()),
     url(r'^crawler/$', views.CrawlerDetail.as_view()),

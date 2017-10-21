@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="deeb4f16-6b00-40f6-9ea5-cfb6f42a64cb" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/crawlerAPI/osoriCrawlerAPI/urls.py" afterPath="$PROJECT_DIR$/crawlerAPI/osoriCrawlerAPI/urls.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/crawlerAPI/osoriCrawlerAPI/views.py" afterPath="$PROJECT_DIR$/crawlerAPI/osoriCrawlerAPI/views.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -17,8 +18,8 @@
       <file leaf-file-name="views.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/crawlerAPI/osoriCrawlerAPI/views.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="156">
-              <caret line="96" column="0" lean-forward="true" selection-start-line="96" selection-start-column="0" selection-end-line="96" selection-end-column="0" />
+            <state relative-caret-position="-5798">
+              <caret line="26" column="21" lean-forward="false" selection-start-line="26" selection-start-column="21" selection-end-line="26" selection-end-column="21" />
               <folding>
                 <element signature="e#0#45#0" expanded="true" />
               </folding>
@@ -115,8 +116,8 @@
       <file leaf-file-name="urls.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/crawlerAPI/osoriCrawlerAPI/urls.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="468">
-              <caret line="18" column="58" lean-forward="true" selection-start-line="18" selection-start-column="58" selection-end-line="18" selection-end-column="58" />
+            <state relative-caret-position="312">
+              <caret line="12" column="58" lean-forward="false" selection-start-line="12" selection-start-column="58" selection-end-line="12" selection-end-column="58" />
               <folding>
                 <element signature="e#0#32#0" expanded="true" />
               </folding>
@@ -140,7 +141,6 @@
       <find>AUTH_USER_</find>
       <find>REST_FRA</find>
       <find>is_aut</find>
-      <find>authenticate</find>
       <find>secret_key</find>
       <find>CrawlerList</find>
       <find>next</find>
@@ -151,6 +151,8 @@
       <find>send_mail</find>
       <find>Allowed</find>
       <find>login success</find>
+      <find>authentication</find>
+      <find>authenticate</find>
       <find>is_au</find>
     </findStrings>
   </component>
@@ -168,17 +170,18 @@
         <option value="D:/박준형/kakao.py" />
         <option value="$PROJECT_DIR$/crawlerAPI/osoriCrawlerAPI/admin.py" />
         <option value="$PROJECT_DIR$/crawlerAPI/osoriCrawlerAPI/models.py" />
-        <option value="$PROJECT_DIR$/crawlerAPI/osoriCrawlerAPI/urls.py" />
         <option value="$PROJECT_DIR$/crawlerAPI/osoriCrawlerAPI/serializers.py" />
         <option value="$PROJECT_DIR$/crawlerAPI/crawlerAPI/settings.py" />
+        <option value="$PROJECT_DIR$/crawlerAPI/osoriCrawlerAPI/urls.py" />
         <option value="$PROJECT_DIR$/crawlerAPI/osoriCrawlerAPI/views.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="436" />
-    <option name="width" value="1107" />
-    <option name="height" value="831" />
+    <option name="x" value="-8" />
+    <option name="y" value="-8" />
+    <option name="width" value="1936" />
+    <option name="height" value="1056" />
   </component>
   <component name="ProjectView">
     <navigator currentView="ProjectPane" proportions="" version="1">
@@ -466,10 +469,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="436" y="0" width="1107" height="831" extended-state="0" />
+    <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17574021" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.09808102" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3409091" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -802,16 +805,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/crawlerAPI/osoriCrawlerAPI/urls.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="468">
-          <caret line="18" column="58" lean-forward="true" selection-start-line="18" selection-start-column="58" selection-end-line="18" selection-end-column="58" />
-          <folding>
-            <element signature="e#0#32#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/crawlerAPI/osoriCrawlerAPI/serializers.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="546">
@@ -862,6 +855,16 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/crawlerAPI/osoriCrawlerAPI/urls.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="312">
+          <caret line="12" column="58" lean-forward="false" selection-start-line="12" selection-start-column="58" selection-end-line="12" selection-end-column="58" />
+          <folding>
+            <element signature="e#0#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/crawlerAPI/osoriCrawlerAPI/models.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2647">
@@ -874,8 +877,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/crawlerAPI/osoriCrawlerAPI/views.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="156">
-          <caret line="96" column="0" lean-forward="true" selection-start-line="96" selection-start-column="0" selection-end-line="96" selection-end-column="0" />
+        <state relative-caret-position="-5798">
+          <caret line="26" column="21" lean-forward="false" selection-start-line="26" selection-start-column="21" selection-end-line="26" selection-end-column="21" />
           <folding>
             <element signature="e#0#45#0" expanded="true" />
           </folding>

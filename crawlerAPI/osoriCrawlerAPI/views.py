@@ -17,16 +17,15 @@ def main(request):
     return render(request, 'osoriCrawlerAPI/main.html', {})
 
 class Auth():
-    def verify_user(self, request, user_id, user_key):
+    def authenticate(self, email, password):
         try:
-            if request.session['user_id'] != user_id or request.session['user_key'] != user_key:
-                return_data = {'result': 0, 'message': 'Invalid session'}
-                return return_data
+            user = UserProfile.objects.get(email=email)
         except:
-            return_data = {'result': 0, 'message': 'No have key in session'}
-            return return_data
-        return_data = {'result': 1, 'user_id': user_id, 'user_key': user_key}
-        return return_data
+            return -1
+        chk_password = check_password(password=password, encoded=user.password)
+        if chk_password is False:
+            return -2
+        return user
 
     def email_auth(self, request, auth):
         result = {}
@@ -52,10 +51,10 @@ class Password(APIView):
         return password
 
     def post(self, request):
-        user_id = request.data['user_id']
+        email = request.data['email']
         temp_password = Password().make_temp_password()
         try:
-            user = UserProfile.objects.get(user_id=user_id)	
+            user = UserProfile.objects.get(email=email)
         except:
             return ErrorResponse().error_response(-1, "Invalid user")
      
@@ -63,7 +62,7 @@ class Password(APIView):
             'temp password',
             temp_password + ' login and modify your password.',
             'bees1114@naver.com',
-            [user_id],
+            [email],
         )
         user.password = make_password(password=temp_password, salt=None, hasher='default')
         user.save()
@@ -72,27 +71,27 @@ class Password(APIView):
 
     def put(self, request):
         try:
-            user_id=request.data['user_id']
+            email = request.data['email']
         except:
-            return ErrorResponse().error_response(-1, "No uesr_id")
+            return ErrorResponse().error_response(-1, "No email")
         try:
             password = request.data['password']
         except:
             return ErrorResponse().error_response(-1, "No current password")
         try:
-            new_password=request.data['new_password']
+            new_password = request.data['new_password']
         except:
             return ErrorResponse().error_response(-1, "No new_password")
-        user = UserProfile.objects.get(user_id = user_id)
-        chk_password = check_password(password = password, encoded = user.password)
+        user = UserProfile.objects.get(email=email)
+        chk_password = check_password(password=password, encoded=user.password)
         if chk_password is False:
             return ErrorResponse().error_response(-100, "Not correct current password")
-        user.password = make_password(password = new_password, salt = None, hasher = 'default')
+        user.password = make_password(password=new_password, salt=None, hasher=\'default')
         user.save()
         return_data = {"message":"success", "ErrorCode":0}
         return Response(return_data)
 
-class UserList(APIView):
+class SignUp(APIView):
     permission_classes = ()
 
     def make_auth_key(self):
@@ -149,26 +148,7 @@ class UserList(APIView):
             return Response(return_data)
         return ErrorResponse().error_response(-1, 'Error at the end')
 
-class UserDetail(APIView):
-    def make_user_key(self):
-        Strings = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'q', 'r', 's',
-                   't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
-
-        user_key = ''
-        for i in range(0, 15):
-            user_key = user_key + Strings[random.randrange(0, 35)]
-        return user_key
-
-    def authenticate(self, email, password):
-        try:
-            user = UserProfile.objects.get(email=email)
-        except:
-            return -1
-        chk_password = check_password(password=password, encoded=user.password)
-        if chk_password is False:
-            return -2
-        return user
-
+class SignIn(APIView):
     def get_object(self, email):
         try:
             return UserProfile.objects.get(email=email)
@@ -200,7 +180,7 @@ class UserDetail(APIView):
             return_data = {'message': 'Need authentication', 'ErrorCode': -300}
             return Response(return_data)
 
-        user = self.authenticate(email=email, password=password)
+        user = Auth().authenticate(email=email, password=password)
         if user is -1:
             return_data = {'message': 'Invalid user', 'ErrorCode': -100}
             return Response(return_data)
@@ -221,9 +201,27 @@ class UserDetail(APIView):
 
         return Response(return_data)
 
+class UserDetail(APIView):
+    '''
+    def make_user_key(self):
+        Strings = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'q', 'r', 's',
+                   't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
+
+        user_key = ''
+        for i in range(0, 15):
+            user_key = user_key + Strings[random.randrange(0, 35)]
+        return user_key
+    '''
+
+    def get_object(self, email):
+        try:
+            return UserProfile.objects.get(email=email)
+        except UserProfile.DoesNotExist:
+            return False
+
     def put(self, request, format=None):
-        user_id = request.GET['user_id']
-        user = self.get_object(id=user_id)
+        email = request.GET['email']
+        user = self.get_object(email=email)
         if user == False:
             return Response("Invalid user", status=status.HTTP_400_BAD_REQUEST)
         data = request.data
