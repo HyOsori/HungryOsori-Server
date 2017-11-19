@@ -7,6 +7,7 @@ from rest_framework.authtoken.models import Token
 from osoriCrawlerAPI.models import UserProfile, Crawler, Subscription, PushToken
 from osoriCrawlerAPI.serializers import UserProfileSerializer, CrawlerSerializer, SubscriptionSerializer, PushTokenSerializer
 from crawlerAPI.keys import HOST_IP
+from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.mail import send_mail
 from django.http import HttpResponse, HttpRequest
@@ -120,43 +121,73 @@ class SignUp(APIView):
 
     def post(self, request, format=None):
         data = request.data
+        # sign up Case1: by email
+        if data['sign_up_type'] == 'email':
+            # checking email address in requested data are correct email format or not
+            if re.match(' /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i',
+                        data['email']) is not None:
+                return ErrorResponse.error_response(-200, 'Invalid email address')
 
-        #checking email address in requested data are correct email format or not
-        if re.match(' /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i',
-                    data['email']) is not None:
-            return ErrorResponse.error_response(-200, 'Invalid email address')
+            # checking email address is duplicated or not
+            exist = UserProfile.objects.filter(email=data['email'])
+            if exist.count() != 0:
+                return ErrorResponse.error_response(-100, 'Already exist user_id')
 
-        #checking email address is duplicated or not
-        exist = UserProfile.objects.filter(email=data['email'])
-        if exist.count() != 0:
-            return ErrorResponse.error_response(-100, 'Already exist user_id')
+            password = make_password(password=data['password'], salt=None, hasher='default')
 
-        password = make_password(password=data['password'], salt=None, hasher='default')
+            # make email authenticate key
+            is_auth = self.make_auth_key()
 
-        #make email authenticate key
-        is_auth = self.make_auth_key()
+            # send confirm email
+            url = 'http://' + HOST_IP + '/email_auth/'+is_auth+'/'
+            user = dict()
+            user['email'] = data['email']
+            user['name'] = data['name']
+            user['password'] = password
+            user['is_auth'] = is_auth
+            user['sign_up_type'] = 'email'
+            userSerializer = UserProfileSerializer(data=user)
 
-        #send confirm email
-        url = 'http://' + HOST_IP + '/email_auth/'+is_auth+'/'
-        user = {}
-        user['email'] = data['email']
-        user['name'] = data['name']
-        user['password'] = password
-        user['is_auth'] = is_auth
-        userSerializer = UserProfileSerializer(data=user)
+            if userSerializer.is_valid():
+                userSerializer.save()
+                send_mail(
+                    'Authentication mail.',
+                    url+' authentication by click this urls.',
+                    'beespjh@gmail.com',
+                    [data['email']],
+                    fail_silently=False,
+                )
+                return_data = {'message': 'Success', 'ErrorCode': 0}
+                return Response(return_data)
+            return ErrorResponse().error_response(-1, 'Error at the end')
+        # Sign up Case2 : by social / facebook, google, kakao
+        else:
+            # checking email address in requested data are correct email format or not
+            if re.match(' /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i',
+                        data['email']) is not None:
+                return ErrorResponse.error_response(-200, 'Invalid email address')
 
-        if userSerializer.is_valid():
-            userSerializer.save()
-            send_mail(
-                'Authentication mail.',
-                url+' authentication by click this urls.',
-                'beespjh@gmail.com',
-                [data['email']],
-                fail_silently=False,
-            )
-            return_data = {'message': 'Success', 'ErrorCode': 0}
-            return Response(return_data)
-        return ErrorResponse().error_response(-1, 'Error at the end')
+            # checking email address is duplicated or not
+            exist = UserProfile.objects.filter(email=data['email'])
+            if exist.count() != 0:
+                return ErrorResponse.error_response(-100, 'Already exist user_id')
+
+            user = dict()
+            user['email'] = data['email']
+            user['name'] = data['name']
+            user['password'] = 'Null'
+            user['is_auth'] = 'True'
+            user['sign_up_type'] = data['sign_up_type']
+            userSerializer = UserProfileSerializer(data=user)
+
+            if userSerializer.is_valid():
+                userSerializer.save()
+                return_data = {'message': 'Success', 'ErrorCode': 0}
+                return Response(return_data)
+            else:
+                return ErrorResponse().error_response(-1, 'Error at the end')
+        return ErrorResponse().error_response(-1, 'Error at the class end')
+
 
 class SignIn(APIView):
     permission_classes = ()
@@ -185,7 +216,7 @@ class SignIn(APIView):
             return Response(return_data)
         try:
             UserProfile.objects.get(email=email)
-        except :
+        except ObjectDoesNotExist:
             return_data = {'message': 'Invalid user', 'ErrorCode': -100}
             return Response(return_data)
         if UserProfile.objects.get(email=email).is_email_authenticated() is not True:
@@ -212,6 +243,7 @@ class SignIn(APIView):
             return Response(data)
 
         return Response(return_data)
+
 
 class UserDetail(APIView):
 

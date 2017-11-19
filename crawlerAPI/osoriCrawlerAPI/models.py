@@ -90,6 +90,7 @@ class UserProfile(AbstractBaseUser, models.Model):
 
     class Meta:
         ordering = ('created',)
+        unique_together = (('email', 'sign_up_type'),)
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
