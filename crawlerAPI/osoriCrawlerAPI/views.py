@@ -94,11 +94,70 @@ class Password(APIView):
         return_data = {"message": "success", "ErrorCode": 0}
         return Response(return_data)
 
-class SocialSignUp(APIView):
+class SocialSign(APIView):
     permission_classes = ()
 
     def post(self, request, format=None):
         data = request.data
+        try:
+            user = UserProfile.objects.get(email=data['email'])
+        except ObjectDoesNotExist:
+            user = None
+        if user is None:
+            if re.match(' /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i',
+                        data['email']) is not None:
+                return ErrorResponse.error_response(-200, 'Invalid email address')
+
+            # checking email address is duplicated or not
+            exist = UserProfile.objects.filter(email=data['email'])
+            if exist.count() != 0:
+                return ErrorResponse.error_response(-100, 'Already exist user_id')
+
+            user = dict()
+            user['email'] = data['email']
+            user['name'] = data['name']
+            user['password'] = 'Null'
+            user['is_auth'] = 'True'
+            user['sign_up_type'] = data['sign_up_type']
+            userSerializer = UserProfileSerializer(data=user)
+
+            if userSerializer.is_valid():
+                userSerializer.save()
+                return_data = {'message': 'Success', 'ErrorCode': 0}
+                return Response(return_data)
+            else:
+                return ErrorResponse().error_response(-1, 'Error at the end')
+        else:
+            try:
+                email = request.data['email']
+            except Exception:
+                return_data = {'message': 'No email', 'ErrorCode': -1}
+                return Response(return_data)
+            try:
+                push_token = request.data['push_token']
+            except Exception:
+                return_data = {'message': 'No push token', 'ErrorCode': -1}
+                return Response(return_data)
+            try:
+                UserProfile.objects.get(email=email)
+            except ObjectDoesNotExist:
+                return_data = {'message': 'Invalid user', 'ErrorCode': -100}
+                return Response(return_data)
+
+            user = UserProfile.objects.get(email=data['email'])
+
+            user_token = dict()
+            user_token['owner'] = user
+            user_token['push_token'] = push_token
+            pushTokenSerializer = PushTokenSerializer(data=user_token)
+
+            token, created = Token.objects.get_or_create(user=user)
+            if pushTokenSerializer.is_valid():
+                pushTokenSerializer.save()
+            data = {'token': token.key, 'email': email, 'message': "Login success", 'ErrorCode': 0}
+            return Response(data)
+
+        return Response(return_data)
 
 
 class SignUp(APIView):
@@ -163,30 +222,7 @@ class SignUp(APIView):
         # Sign up Case2 : by social / facebook, google, kakao
         else:
             # checking email address in requested data are correct email format or not
-            if re.match(' /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i',
-                        data['email']) is not None:
-                return ErrorResponse.error_response(-200, 'Invalid email address')
-
-            # checking email address is duplicated or not
-            exist = UserProfile.objects.filter(email=data['email'])
-            if exist.count() != 0:
-                return ErrorResponse.error_response(-100, 'Already exist user_id')
-
-            user = dict()
-            user['email'] = data['email']
-            user['name'] = data['name']
-            user['password'] = 'Null'
-            user['is_auth'] = 'True'
-            user['sign_up_type'] = data['sign_up_type']
-            userSerializer = UserProfileSerializer(data=user)
-
-            if userSerializer.is_valid():
-                userSerializer.save()
-                return_data = {'message': 'Success', 'ErrorCode': 0}
-                return Response(return_data)
-            else:
-                return ErrorResponse().error_response(-1, 'Error at the end')
-        return ErrorResponse().error_response(-1, 'Error at the class end')
+            return ErrorResponse().error_response(-1, 'Error at the class end')
 
 
 class SignIn(APIView):

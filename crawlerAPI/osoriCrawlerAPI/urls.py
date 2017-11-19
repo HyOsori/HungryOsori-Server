@@ -10,7 +10,7 @@ urlpatterns = [
     url(r'^$', views.main, name='main'),
     url(r'^admin/', admin.site.urls, name='admin'),
     url(r'^signup/$', views.SignUp.as_view(), name='signup'),
-    url(r'^social_signup/$', views.SocialSignUp.as_view(), name='social_signup'),
+    url(r'^social_sign/$', views.SocialSign.as_view(), name='social_sign'),
     url(r'^signin/$', views.SignIn.as_view(), name='signin'),
     url(r'^user/$', views.UserDetail.as_view(), name='user'),
     url(r'^crawlers/$', views.CrawlerList.as_view()),
