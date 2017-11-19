@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 from .forms import UserProfileCreationForm, UserProfileChangeForm
-from .models import UserProfile, Crawler
+from .models import UserProfile, Crawler, Subscription, PushToken
 
 class UserProfileAdmin(BaseUserAdmin):
     # The forms to add and change user instances
@@ -18,7 +18,7 @@ class UserProfileAdmin(BaseUserAdmin):
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         ('Personal info', {'fields': ('name', )}),
-        ('Permissions', {'fields': ('is_active', 'is_admin',)}),
+        ('Permissions', {'fields': ('is_active', 'is_admin', 'is_auth',)}),
     )
     # add_fieldsets is not a standard ModelAdmin attribute. UserAdmin
     # overrides get_fieldsets to use this attribute when creating a user.
@@ -36,5 +36,6 @@ class UserProfileAdmin(BaseUserAdmin):
 # Now register the new UserAdmin...
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(Crawler)
-
+admin.site.register(Subscription)
+admin.site.register(PushToken)
 #admin.site.unregister(Group)

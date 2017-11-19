@@ -15,11 +15,8 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
-from osoriCrawlerAPI import urls as Urls
 
 urlpatterns = [
-    #url(r'^', include('osoriCrawlerAPI.urls')),
-    #url(r'^signup/$', Views.signup, name='signup'),
-    #url(r'^auth/', include('rest_framework_social_oauth2.urls')),
-    url(r'^', include(Urls)),
+    url(r'^', include('osoriCrawlerAPI.urls')),
+    url(r'^auth/', include('rest_framework_social_oauth2.urls')),
 ]

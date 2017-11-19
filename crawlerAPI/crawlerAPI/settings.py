@@ -19,7 +19,7 @@ TEMPLATES_DIRS = (os.path.join(BASE_DIR, 'templates'),)
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 import sys
-DJANGO_PROJECT_PATH='D:/git/HungryOsori-Server/crawlerAPI'
+DJANGO_PROJECT_PATH = 'D:/git/HungryOsori-Server/crawlerAPI'
 if DJANGO_PROJECT_PATH not in sys.path:
     sys.path.append(DJANGO_PROJECT_PATH)
 
@@ -45,6 +45,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'osoriCrawlerAPI',
+    'oauth2_provider',
+    'social_django',
+    'rest_framework_social_oauth2',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -71,8 +74,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 #Oauth
-                'social.apps.django_app.context_processors.backends',
-                'social.apps.django_app.context_processors.login_redirect',
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
             ],
         },
     },
@@ -119,7 +122,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/1.10/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ko-kr'
 
 TIME_ZONE = 'Asia/Seoul'
 
@@ -144,8 +147,6 @@ TEMPLATE_CONTEXT_PROCESSORS = {
     "django.core.context_processors.tz",
     "django.contrib.messages.context_processors.messages",
     "django.core.context_processors.request",
-    "social.apps.django_app.context_processors.backends",
-    "social.apps.django_app.context_processors.login_redirect",
 }
 
 REST_FRAMEWORK = {
@@ -154,21 +155,26 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         #Oauth
-        #'oauth2_provider.ext.rest_framework.OAuth2Authentication',
-        #'rest_framework_social_oauth2.authentication.SocialAuthentication',
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+        'rest_framework_social_oauth2.authentication.SocialAuthentication',
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.TokenAuthentication',
-        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
     )
 }
-'''
+
 AUTHENTICATION_BACKENDS = (
+    #Oauth provider
+    #Using Facebook Oauth2
     'social.backends.facebook.FacebookAppOAuth2',
     'social.backends.facebook.FacebookOAuth2',
+
+    #django-rest-framework-social-oauth2
     'rest_framework_social_oauth2.backends.DjangoOAuth2',
+
+    #Django
     'django.contrib.auth.backends.ModelBackend',
 )
-'''
+
 #password_hasher
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',

@@ -36,7 +36,7 @@ class UserProfile(AbstractBaseUser, models.Model):
     is_admin = models.BooleanField(default=False)
     created = models.DateField(auto_now_add=True)
     last_login = models.DateField(auto_now=True)
-
+    sign_up_type = models.CharField(max_length=100)
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
@@ -103,7 +103,10 @@ class Crawler(models.Model):
     title = models.CharField(max_length=100)
     description = models.CharField(max_length=100)
     created = models.DateField(auto_now=True)
-    
+
+    def __str__(self):
+        return self.crawler_id
+
     def from_db_value(self, value, expression, connection, context):
         if value is None:
             return value
