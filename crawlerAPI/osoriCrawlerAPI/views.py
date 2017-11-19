@@ -16,11 +16,13 @@ from django.utils.datastructures import MultiValueDictKeyError
 
 import re, json, random
 
+
 def main(request):
     return render(request, 'osoriCrawlerAPI/main.html', {})
 
 
-class Auth():
+class Auth:
+    @staticmethod
     def authenticate(self, email, sign_up_type, password):
         try:
             user = UserProfile.objects.get(email=email, sign_up_type=sign_up_type)
@@ -31,6 +33,7 @@ class Auth():
             return -2
         return user
 
+    @staticmethod
     def email_auth(self, request, auth):
         result = dict()
         try:
@@ -41,9 +44,10 @@ class Auth():
         user.save()
         return HttpResponse("Authenticated")
 
-class ErrorResponse():
-    def error_response(ErrorCode, message):
-        data = {"message": message, "ErrorCode": ErrorCode}
+
+class ErrorResponse:
+    def error_response(self, errorcode, message):
+        data = {"message": message, "ErrorCode": errorcode}
         return Response(data)
 
 class Password(APIView):
