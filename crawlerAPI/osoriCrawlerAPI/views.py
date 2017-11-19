@@ -12,16 +12,18 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.core.mail import send_mail
 from django.http import HttpResponse, HttpRequest
 from django.shortcuts import render
+from django.utils.datastructures import MultiValueDictKeyError
 
 import re, json, random
 
 def main(request):
     return render(request, 'osoriCrawlerAPI/main.html', {})
 
+
 class Auth():
-    def authenticate(self, email, password):
+    def authenticate(self, email, sign_up_type, password):
         try:
-            user = UserProfile.objects.get(email=email)
+            user = UserProfile.objects.get(email=email, sign_up_type=sign_up_type)
         except:
             return -1
         chk_password = check_password(password=password, encoded=user.password)
@@ -30,7 +32,7 @@ class Auth():
         return user
 
     def email_auth(self, request, auth):
-        result = {}
+        result = dict()
         try:
             user = UserProfile.objects.get(is_auth=auth)
         except:
@@ -58,7 +60,7 @@ class Password(APIView):
         temp_password = Password().make_temp_password()
         try:
             user = UserProfile.objects.get(email=email)
-        except:
+        except ObjectDoesNotExist:
             return ErrorResponse().error_response(-1, "Invalid user")
      
         send_mail(
@@ -100,7 +102,7 @@ class SocialSign(APIView):
     def post(self, request, format=None):
         data = request.data
         try:
-            user = UserProfile.objects.get(email=data['email'])
+            user = UserProfile.objects.get(email=data['email'], sign_up_type=data['sign_up_type'])
         except ObjectDoesNotExist:
             user = None
         if user is None:
@@ -109,7 +111,7 @@ class SocialSign(APIView):
                 return ErrorResponse.error_response(-200, 'Invalid email address')
 
             # checking email address is duplicated or not
-            exist = UserProfile.objects.filter(email=data['email'])
+            exist = UserProfile.objects.filter(email=data['email'], sign_up_type=data['sign_up_type'])
             if exist.count() != 0:
                 return ErrorResponse.error_response(-100, 'Already exist user_id')
 
@@ -129,14 +131,19 @@ class SocialSign(APIView):
                 return ErrorResponse().error_response(-1, 'Error at the end')
         else:
             try:
-                email = request.data['email']
-            except Exception:
+                email = data['email']
+            except MultiValueDictKeyError:
                 return_data = {'message': 'No email', 'ErrorCode': -1}
                 return Response(return_data)
             try:
-                push_token = request.data['push_token']
-            except Exception:
+                push_token = data['push_token']
+            except MultiValueDictKeyError:
                 return_data = {'message': 'No push token', 'ErrorCode': -1}
+                return Response(return_data)
+            try:
+                sign_up_type = data['sign_up_type']
+            except MultiValueDictKeyError:
+                return_data = {'message': 'No sign up type', 'ErrorCode': -1}
                 return Response(return_data)
             try:
                 UserProfile.objects.get(email=email)
@@ -144,11 +151,12 @@ class SocialSign(APIView):
                 return_data = {'message': 'Invalid user', 'ErrorCode': -100}
                 return Response(return_data)
 
-            user = UserProfile.objects.get(email=data['email'])
+            user = UserProfile.objects.get(email=data['email'], sign_up_type=sign_up_type)
 
             user_token = dict()
             user_token['owner'] = user
             user_token['push_token'] = push_token
+
             pushTokenSerializer = PushTokenSerializer(data=user_token)
 
             token, created = Token.objects.get_or_create(user=user)
@@ -188,7 +196,7 @@ class SignUp(APIView):
                 return ErrorResponse.error_response(-200, 'Invalid email address')
 
             # checking email address is duplicated or not
-            exist = UserProfile.objects.filter(email=data['email'])
+            exist = UserProfile.objects.filter(email=data['email'], sign_up_type=data['sign_up_type'])
             if exist.count() != 0:
                 return ErrorResponse.error_response(-100, 'Already exist user_id')
 
@@ -228,30 +236,31 @@ class SignUp(APIView):
 class SignIn(APIView):
     permission_classes = ()
 
-    def get_object(self, email):
+    def get_object(self, email, sign_up_type):
         try:
-            return UserProfile.objects.get(email=email)
+            return UserProfile.objects.get(email=email, sign_up_type=sign_up_type)
         except UserProfile.DoesNotExist:
             return False
 
     def post(self, request, format=None):
+        data = request.data
         try:
-            email = request.data['email']
-        except Exception:
+            email = data['email']
+        except MultiValueDictKeyError:
             return_data = {'message': 'No email', 'ErrorCode': -1}
             return Response(return_data)
         try:
-            password = request.data['password']
-        except Exception:
+            password = data['password']
+        except MultiValueDictKeyError:
             return_data = {'message': 'No password', 'ErrorCode': -1}
             return Response(return_data)
         try:
-            push_token = request.data['push_token']
-        except Exception:
+            push_token = data['push_token']
+        except MultiValueDictKeyError:
             return_data = {'message': 'No push token', 'ErrorCode': -1}
             return Response(return_data)
         try:
-            UserProfile.objects.get(email=email)
+            UserProfile.objects.get(email=email, sign_up_type='email')
         except ObjectDoesNotExist:
             return_data = {'message': 'Invalid user', 'ErrorCode': -100}
             return Response(return_data)
@@ -259,7 +268,7 @@ class SignIn(APIView):
             return_data = {'message': 'Need authentication', 'ErrorCode': -300}
             return Response(return_data)
 
-        user = Auth().authenticate(email=email, password=password)
+        user = Auth().authenticate(email=email, sign_up_type='email', password=password)
         if user is -1:
             return_data = {'message': 'Invalid user', 'ErrorCode': -100}
             return Response(return_data)
