@@ -28,7 +28,7 @@ class UserManager(BaseUserManager):
 
 #Models for user profile
 class UserProfile(AbstractBaseUser, models.Model):
-    email = models.EmailField(verbose_name='email address', primary_key=True, max_length=100)
+    email = models.EmailField(verbose_name='email address', max_length=100)
     name = models.CharField(max_length=100)
     password = models.CharField(max_length=100)
     is_auth = models.CharField(max_length=100, default='False')
@@ -40,6 +40,9 @@ class UserProfile(AbstractBaseUser, models.Model):
 
     objects = UserManager()
 
+    @TODO:
+        유저, 회원가입 방식으로 unique하게 만들 경우 장고 기본 auth에 위배됨 장고 기본 auth는
+        유저 네임 필드가 당연하게 unique할 것이라 정의되어있음.
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name', 'password']
 

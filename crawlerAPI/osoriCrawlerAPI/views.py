@@ -132,7 +132,8 @@ class SocialSign(APIView):
                 return_data = {'message': 'Success', 'ErrorCode': 0}
                 return Response(return_data)
             else:
-                return ErrorResponse().error_response(-1, 'Error at the end')
+                print(userSerializer)
+                return ErrorResponse().error_response(-1, 'Error 1at the end')
         else:
             try:
                 email = data['email']
