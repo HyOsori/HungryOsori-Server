@@ -98,7 +98,7 @@ class SocialSignUp(APIView):
 
     def post(self, request, format=None):
         data = request.data
-        
+
 
 class SignUp(APIView):
     permission_classes = ()

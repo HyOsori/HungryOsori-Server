@@ -37,6 +37,7 @@ class UserProfile(AbstractBaseUser, models.Model):
     created = models.DateField(auto_now_add=True)
     last_login = models.DateField(auto_now=True)
     sign_up_type = models.CharField(max_length=100)
+
     objects = UserManager()
 
     USERNAME_FIELD = 'email'

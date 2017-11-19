@@ -19,8 +19,9 @@ class CrawlerSpider(scrapy.Spider):
         filename = 'crawlers.json'
         with open(filename, 'wb') as f:
             f.write(response.body)
-        with open('crawlers.json') as crawler_file:
+        with open('crawlers.json', encoding='utf-8') as crawler_file:
             data = json.load(crawler_file)
-        crawlers=data.values()
+        crawlers = data.values()
         for crawler in crawlers:
             yield crawlerItem(crawler_id=crawler['crawl_id'], thumbnail_url=crawler['thumbnail'], link_url=crawler['link_url'], title=crawler['title'], description=crawler['desc'])
+
