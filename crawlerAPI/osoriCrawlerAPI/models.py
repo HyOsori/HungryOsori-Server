@@ -26,7 +26,8 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-#Models for user profile
+
+# Models for user profile
 class UserProfile(AbstractBaseUser, models.Model):
     email = models.EmailField(verbose_name='email address', max_length=100)
     name = models.CharField(max_length=100)
@@ -40,9 +41,6 @@ class UserProfile(AbstractBaseUser, models.Model):
 
     objects = UserManager()
 
-    @TODO:
-        유저, 회원가입 방식으로 unique하게 만들 경우 장고 기본 auth에 위배됨 장고 기본 auth는
-        유저 네임 필드가 당연하게 unique할 것이라 정의되어있음.
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name', 'password']
 
@@ -95,12 +93,14 @@ class UserProfile(AbstractBaseUser, models.Model):
         ordering = ('created',)
         unique_together = (('email', 'sign_up_type'),)
 
+
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:
         Token.objects.create(user=instance)
 
-'''Models for Crawler'''
+
+# Models for Crawler
 class Crawler(models.Model):
     crawler_id = models.CharField(max_length=100, primary_key=True)
     thumbnail_url = models.CharField(max_length=100)
@@ -127,7 +127,8 @@ class Crawler(models.Model):
     class Meta:
         ordering = ('title', 'created', 'crawler_id',)
 
-'''Models for Information of who subscript which crawlers'''
+
+# Models for Information of who subscript which crawlers
 class Subscription(models.Model):
     subscriber = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     crawler = models.ForeignKey(Crawler, on_delete=models.CASCADE)
@@ -149,10 +150,12 @@ class Subscription(models.Model):
         ordering = ('subscriber', 'crawler')
         unique_together = (('subscriber', 'crawler'),)
 
-'''Models for user and who`s device token'''
+
+# Models for user and who`s device token
 class PushToken(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,)
     push_token = models.CharField(max_length=100)
+
     def from_db_value(self, value, expression, connection, context):
         if value is None:
             return value

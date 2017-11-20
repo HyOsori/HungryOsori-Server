@@ -69,15 +69,23 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                "django.contrib.auth.context_processors.auth",
+                "django.template.context_processors.debug",
+                "django.template.context_processors.i18n",
+                "django.template.context_processors.media",
+                "django.template.context_processors.static",
+                "django.template.context_processors.tz",
+                "django.contrib.messages.context_processors.messages",
+                "django.template.context_processors.request",
                 #Oauth
                 'social_django.context_processors.backends',
                 'social_django.context_processors.login_redirect',
             ],
         },
+
+
     },
 
 ]
@@ -138,17 +146,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-TEMPLATE_CONTEXT_PROCESSORS = {
-    "django.contrib.auth.context_processors.auth",
-    "django.core.context_processors.debug",
-    "django.core.context_processors.i18n",
-    "django.core.context_processors.media",
-    "django.core.context_processors.static",
-    "django.core.context_processors.tz",
-    "django.contrib.messages.context_processors.messages",
-    "django.core.context_processors.request",
-}
-
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -202,5 +199,12 @@ SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'id, name, email, age_range'
 }
+
+'''
+ since Django 1.7, if username field were not unique, auth.Warning004 is raised. 
+ To ignore the warning, this line added.
+ In this user model, unique_together are used in username field(labeled email) and sign_up_type. 
+'''
+SILENCED_SYSTEM_CHECKS = ["auth.W004"]
 
 AUTH_USER_MODEL = 'osoriCrawlerAPI.UserProfile'

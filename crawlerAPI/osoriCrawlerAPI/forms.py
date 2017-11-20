@@ -4,6 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from .models import UserProfile, UserManager
 
+
 class UserProfileCreationForm(forms.ModelForm):
     # 사용자 생성 폼
     email = forms.EmailField(
@@ -74,6 +75,7 @@ class UserProfileCreationForm(forms.ModelForm):
             user.save()
         return user
 
+
 class UserProfileChangeForm(forms.ModelForm):
     # 비밀번호 변경 폼
     password = ReadOnlyPasswordHashField(
@@ -89,6 +91,7 @@ class UserProfileChangeForm(forms.ModelForm):
         # This is done here, rather than on the field, because the
         # field does not have access to the initial value
         return self.initial["password"]
+
 
 class UserLoginForm(forms.ModelForm):
     class Meta:

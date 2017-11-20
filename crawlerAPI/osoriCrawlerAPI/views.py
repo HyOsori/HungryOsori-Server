@@ -21,36 +21,46 @@ def main(request):
     return render(request, 'osoriCrawlerAPI/main.html', {})
 
 
+# Authentication. ----------------
+# 1. check id and password
+# 2. method for email auth (When user sign up by email)
 class Auth:
+
+    # find user and check password
     @staticmethod
     def authenticate(self, email, sign_up_type, password):
         try:
             user = UserProfile.objects.get(email=email, sign_up_type=sign_up_type)
-        except:
+        except ObjectDoesNotExist:
             return -1
         chk_password = check_password(password=password, encoded=user.password)
         if chk_password is False:
             return -2
         return user
 
+    # email authentication
     @staticmethod
-    def email_auth(self, request, auth):
-        result = dict()
+    def email_auth(self, auth):
         try:
             user = UserProfile.objects.get(is_auth=auth)
-        except:
+        except ObjectDoesNotExist:
             return HttpResponse("Invalid user or already authenticated")
         user.is_auth = 'True'
         user.save()
         return HttpResponse("Authenticated")
 
 
+# class for making error response object
 class ErrorResponse:
-    def error_response(self, errorcode, message):
-        data = {"message": message, "ErrorCode": errorcode}
+    @staticmethod
+    def error_response(error_code, message):
+        data = {"message": message, "ErrorCode": error_code}
         return Response(data)
 
+
+# for password change or find
 class Password(APIView):
+    # make temp password. To use find password
     def make_temp_password(self):
         strings = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'q',
                    'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
@@ -59,13 +69,14 @@ class Password(APIView):
             password = password + strings[random.randrange(0, 35)]
         return password
 
+    # find password. making temp password and send it to email.
     def post(self, request):
         email = request.data['email']
         temp_password = Password().make_temp_password()
         try:
             user = UserProfile.objects.get(email=email)
         except ObjectDoesNotExist:
-            return ErrorResponse().error_response(-1, "Invalid user")
+            return ErrorResponse.error_response(-1, "Invalid user")
      
         send_mail(
             'temp password',
@@ -78,37 +89,54 @@ class Password(APIView):
         data = {'message': 'Temp password sent', 'ErrorCode': 0}
         return HttpResponse(data)
 
+    # password change
     def put(self, request):
+
+        # get data from request.
         try:
             email = request.data['email']
-        except:
-            return ErrorResponse().error_response(-1, "No email")
+        except MultiValueDictKeyError:
+            return ErrorResponse.error_response(-1, "No email")
         try:
             password = request.data['password']
-        except:
-            return ErrorResponse().error_response(-1, "No current password")
+        except MultiValueDictKeyError:
+            return ErrorResponse.error_response(-1, "No current password")
         try:
             new_password = request.data['new_password']
-        except:
-            return ErrorResponse().error_response(-1, "No new_password")
-        user = UserProfile.objects.get(email=email)
+        except MultiValueDictKeyError:
+            return ErrorResponse.error_response(-1, "No new_password")
+        try:
+            sign_up_type = request.data['sign_up_type']
+        except MultiValueDictKeyError:
+            return ErrorResponse.error_response(-1, "No sign_up_type")
+
+        try:
+            user = UserProfile.objects.get(email=email, sign_up_type=sign_up_type)
+        except ObjectDoesNotExist:
+            return ErrorResponse.error_response(-1, "No user")
         chk_password = check_password(password=password, encoded=user.password)
         if chk_password is False:
-            return ErrorResponse().error_response(-100, "Not correct current password")
+            return ErrorResponse.error_response(-100, "Not correct current password")
         user.password = make_password(password=new_password, salt=None, hasher='default')
         user.save()
         return_data = {"message": "success", "ErrorCode": 0}
         return Response(return_data)
 
+
+# Sign up and Sign in class for social user
 class SocialSign(APIView):
     permission_classes = ()
 
+    # some user request login, if it is first login, signup the user. if not, just login
     def post(self, request, format=None):
         data = request.data
+        # If user already signup? or not
         try:
             user = UserProfile.objects.get(email=data['email'], sign_up_type=data['sign_up_type'])
         except ObjectDoesNotExist:
             user = None
+
+        # If user visit first time, do sign up
         if user is None:
             if re.match(' /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i',
                         data['email']) is not None:
@@ -125,15 +153,16 @@ class SocialSign(APIView):
             user['password'] = 'Null'
             user['is_auth'] = 'True'
             user['sign_up_type'] = data['sign_up_type']
-            userSerializer = UserProfileSerializer(data=user)
+            user_serializer = UserProfileSerializer(data=user)
 
-            if userSerializer.is_valid():
-                userSerializer.save()
+            if user_serializer.is_valid():
+                user_serializer.save()
                 return_data = {'message': 'Success', 'ErrorCode': 0}
                 return Response(return_data)
             else:
-                print(userSerializer)
-                return ErrorResponse().error_response(-1, 'Error 1at the end')
+                return ErrorResponse.error_response(-1, 'Error 1at the end')
+
+        # if user is already sign up, login the user
         else:
             try:
                 email = data['email']
@@ -162,82 +191,75 @@ class SocialSign(APIView):
             user_token['owner'] = user
             user_token['push_token'] = push_token
 
-            pushTokenSerializer = PushTokenSerializer(data=user_token)
+            # user: push token added
+            push_token_serializer = PushTokenSerializer(data=user_token)
 
             token, created = Token.objects.get_or_create(user=user)
-            if pushTokenSerializer.is_valid():
-                pushTokenSerializer.save()
+            if push_token_serializer.is_valid():
+                push_token_serializer.save()
             data = {'token': token.key, 'email': email, 'message': "Login success", 'ErrorCode': 0}
             return Response(data)
 
         return Response(return_data)
 
 
+# sign up by using email (just in our app)
 class SignUp(APIView):
     permission_classes = ()
 
+    # auth key for email authentication.
     def make_auth_key(self):
         auth_key = ''
         strings = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'q', 'r', 's',
-               't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
+                   't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
         for i in range(0, 15):
             auth_key = auth_key + strings[random.randrange(0, 35)]
         return auth_key
 
-    def get(self, request, format=None):
-        users = UserProfile.objects.all()
-        if users.count() == 0:
-            return Response('No users')
-        userSerializer = UserProfileSerializer(users, many=True)
-        return Response(userSerializer.data)
-
     def post(self, request, format=None):
         data = request.data
-        # sign up Case1: by email
-        if data['sign_up_type'] == 'email':
-            # checking email address in requested data are correct email format or not
-            if re.match(' /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i',
-                        data['email']) is not None:
-                return ErrorResponse.error_response(-200, 'Invalid email address')
+        # sign up by email
+        # checking email address in requested data are correct email format or not
+        if re.match(' /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i',
+                    data['email']) is not None:
+            return ErrorResponse.error_response(-200, 'Invalid email address')
 
-            # checking email address is duplicated or not
-            exist = UserProfile.objects.filter(email=data['email'], sign_up_type=data['sign_up_type'])
-            if exist.count() != 0:
-                return ErrorResponse.error_response(-100, 'Already exist user_id')
+        # checking email address is duplicated or not (in same sign up type)
+        exist = UserProfile.objects.filter(email=data['email'], sign_up_type=data['sign_up_type'])
+        if exist.count() != 0:
+            return ErrorResponse.error_response(-100, 'Already exist user_id')
 
-            password = make_password(password=data['password'], salt=None, hasher='default')
+        # password hashed
+        password = make_password(password=data['password'], salt=None, hasher='default')
 
-            # make email authenticate key
-            is_auth = self.make_auth_key()
+        # make email authenticate key
+        is_auth = self.make_auth_key()
 
-            # send confirm email
-            url = 'http://' + HOST_IP + '/email_auth/'+is_auth+'/'
-            user = dict()
-            user['email'] = data['email']
-            user['name'] = data['name']
-            user['password'] = password
-            user['is_auth'] = is_auth
-            user['sign_up_type'] = 'email'
-            userSerializer = UserProfileSerializer(data=user)
+        # send confirm email
+        url = 'http://' + HOST_IP + '/email_auth/'+is_auth+'/'
+        user = dict()
+        user['email'] = data['email']
+        user['name'] = data['name']
+        user['password'] = password
+        user['is_auth'] = is_auth
+        user['sign_up_type'] = 'email'
+        user_serializer = UserProfileSerializer(data=user)
 
-            if userSerializer.is_valid():
-                userSerializer.save()
-                send_mail(
-                    'Authentication mail.',
-                    url+' authentication by click this urls.',
-                    'beespjh@gmail.com',
-                    [data['email']],
-                    fail_silently=False,
-                )
-                return_data = {'message': 'Success', 'ErrorCode': 0}
-                return Response(return_data)
-            return ErrorResponse().error_response(-1, 'Error at the end')
-        # Sign up Case2 : by social / facebook, google, kakao
-        else:
-            # checking email address in requested data are correct email format or not
-            return ErrorResponse().error_response(-1, 'Error at the class end')
+        if user_serializer.is_valid():
+            user_serializer.save()
+            send_mail(
+                'Authentication mail.',
+                url+' authentication by click this urls.',
+                'beespjh@gmail.com',
+                [data['email']],
+                fail_silently=False,
+            )
+            return_data = {'message': 'Success', 'ErrorCode': 0}
+            return Response(return_data)
+        return ErrorResponse().error_response(-1, 'Error at the end')
 
 
+# sign in class
 class SignIn(APIView):
     permission_classes = ()
 
@@ -273,7 +295,7 @@ class SignIn(APIView):
             return_data = {'message': 'Need authentication', 'ErrorCode': -300}
             return Response(return_data)
 
-        user = Auth().authenticate(email=email, sign_up_type='email', password=password)
+        user = Auth.authenticate(email=email, sign_up_type='email', password=password)
         if user is -1:
             return_data = {'message': 'Invalid user', 'ErrorCode': -100}
             return Response(return_data)
@@ -293,6 +315,32 @@ class SignIn(APIView):
             return Response(data)
 
         return Response(return_data)
+
+
+# class for log out
+class Logout(APIView):
+
+    def post(self, request):
+        try:
+            email = request.data['email']
+        except exceptions:
+            return ErrorResponse.error_response(-1, 'No email')
+        try:
+            sign_up_type = request.data['sign_up_type']
+        except exceptions:
+            return ErrorResponse.error_response(-1, 'No sign up type')
+        try:
+            user = UserProfile.objects.get(email=email, sign_up_type=sign_up_type)
+        except exceptions:
+            return ErrorResponse.error_response(-1, 'No User')
+        try:
+            token = Token.objects.get(user=user)
+        except exceptions:
+            return ErrorResponse.error_response(-1, 'No Tokens')
+
+        token.delete()
+        data = {'ErrorCode': 0, 'message': 'Logout success'}
+        return Response(data)
 
 
 class UserDetail(APIView):
@@ -324,6 +372,7 @@ class UserDetail(APIView):
         user.delete()
         return Response(email + " deleted")
 
+
 class CrawlerList(APIView):
     def get(self, request, format=None):
         crawlers = Crawler.objects.all()
@@ -339,6 +388,7 @@ class CrawlerList(APIView):
             crawlerSerializer.save()
             return Response(crawlerSerializer.data)
         return Response(crawlerSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class CrawlerDetail(APIView):
     def get_object(self, name):
@@ -373,6 +423,7 @@ class CrawlerDetail(APIView):
         crawler.delete()
         return Response(crawler.title+" deleted")
 
+
 class SubscriptionList(APIView):
     def get(self, request, format=None):
         subscription = Subscription.objects.all()
@@ -392,6 +443,7 @@ class SubscriptionList(APIView):
             return_data={"message":"success", "ErrorCode":0}
             return Response(return_data)
         return ErrorResponse().error_response(-1, "Error")
+
 
 class SubscriptionDetail(APIView):
     def post(self, request, format=None):
@@ -419,6 +471,7 @@ class SubscriptionDetail(APIView):
         return_data={"message":"success", "ErrorCode":0}
         return Response(return_data)
 
+
 class PushTokenList(APIView):
     def get(self, request, format=None):
         token = PushToken.objects.all()
@@ -437,6 +490,7 @@ class PushTokenList(APIView):
             return_data={"message":"success", "ErrorCode":0}
             return Response(return_data)
         return ErrorResponse().error_response(-1, "Error")
+
 
 class PushTokenDetail(APIView):
     def get_object(self, email):
