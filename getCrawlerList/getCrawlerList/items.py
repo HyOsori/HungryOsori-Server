@@ -9,7 +9,7 @@ from scrapy_djangoitem import DjangoItem
 from osoriCrawlerAPI.models import Crawler
 
 
-class crawlerItem(DjangoItem):
+class CrawlerItem(DjangoItem):
     # define the fields for your item here like:
     # name = Field()
     django_model = Crawler

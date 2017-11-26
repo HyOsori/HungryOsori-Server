@@ -28,7 +28,7 @@ class Auth:
 
     # find user and check password
     @staticmethod
-    def authenticate(self, email, sign_up_type, password):
+    def authenticate(email, sign_up_type, password):
         try:
             user = UserProfile.objects.get(email=email, sign_up_type=sign_up_type)
         except ObjectDoesNotExist:

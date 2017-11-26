@@ -1,12 +1,14 @@
 from scrapy.spiders import Spider
 import scrapy
-from getCrawlerList.items import crawlerItem
+from getCrawlerList.items import CrawlerItem
 import json
+
 
 class CrawlerSpider(scrapy.Spider):
     name = "CrawlerSpider"
     allowed_domains = ["github.com"]
     start_ulrs = ['http://raw.githubusercontent.com/HyOsori/Osori-WebCrawler/master/settings.json']
+
     def start_requests(self):
         urls = [
             'http://raw.githubusercontent.com/HyOsori/Osori-WebCrawler/master/settings.json'
@@ -23,5 +25,5 @@ class CrawlerSpider(scrapy.Spider):
             data = json.load(crawler_file)
         crawlers = data.values()
         for crawler in crawlers:
-            yield crawlerItem(crawler_id=crawler['crawl_id'], thumbnail_url=crawler['thumbnail'], link_url=crawler['link_url'], title=crawler['title'], description=crawler['desc'])
+            yield CrawlerItem(crawler_id=crawler['crawl_id'], thumbnail_url=crawler['thumbnail'], link_url=crawler['link_url'], title=crawler['title'], description=crawler['desc'])
 
