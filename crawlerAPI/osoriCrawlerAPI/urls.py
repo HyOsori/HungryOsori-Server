@@ -7,7 +7,6 @@ from rest_framework.authtoken import views as auth_token_views
 ''' There are many things to fix url to right rules and proper type! '''
 
 urlpatterns = [
-    url(r'^$', views.main, name='main'),
     url(r'^admin/', admin.site.urls, name='admin'),
     url(r'^signup/$', views.SignUp.as_view(), name='signup'),
     url(r'^social_sign/$', views.SocialSign.as_view(), name='social_sign'),

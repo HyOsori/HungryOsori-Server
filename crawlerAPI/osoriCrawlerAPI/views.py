@@ -1,6 +1,7 @@
 from rest_framework import status, exceptions
 from rest_framework.views import APIView
 from rest_framework.response import Response
+
 from rest_framework.authentication import TokenAuthentication, BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
@@ -11,14 +12,12 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.mail import send_mail
 from django.http import HttpResponse, HttpRequest
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.utils.datastructures import MultiValueDictKeyError
 
 import re, json, random
 
 
-def main(request):
-    return render(request, 'osoriCrawlerAPI/main.html', {})
 
 
 # Authentication. ----------------
@@ -298,9 +297,13 @@ class SignIn(APIView):
         user = Auth.authenticate(email=email, sign_up_type='email', password=password)
         if user is -1:
             return_data = {'message': 'Invalid user', 'ErrorCode': -100}
+            if push_token == '-1':
+                return redirect('/', return_message=return_data['message'])
             return Response(return_data)
         elif user is -2:
             return_data = {'message': 'Invalid password', 'ErrorCode': -200}
+            if push_token == '-1':
+                return redirect('/', return_message=return_data['message'])
             return Response(return_data)
         else:
             user_token = dict()
@@ -311,7 +314,9 @@ class SignIn(APIView):
             token, created = Token.objects.get_or_create(user=user)
             if pushTokenSerializer.is_valid():
                 pushTokenSerializer.save()
-            data = {'token': token.key, 'email': email, 'message': "Login success", 'ErrorCode': 0}
+            return_data = {'token': token.key, 'email': email, 'message': "Login success", 'ErrorCode': 0}
+            if push_token == '-1':
+                return redirect('/', return_message=return_data['message'])
             return Response(data)
 
         return Response(return_data)
