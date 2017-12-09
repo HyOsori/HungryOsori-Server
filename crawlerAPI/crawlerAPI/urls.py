@@ -17,6 +17,7 @@ from django.conf.urls import include, url
 from django.contrib import admin
 
 urlpatterns = [
+    url(r'^admin/', admin.site.urls, name='admin'),
     url(r'^api/', include('osoriCrawlerAPI.urls')),
     url(r'^', include('osoriCrawlerWebPage.urls')),
     url(r'^auth/', include('rest_framework_social_oauth2.urls')),
