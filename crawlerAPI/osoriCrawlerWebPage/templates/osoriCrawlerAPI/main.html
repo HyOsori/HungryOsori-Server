@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>웹 크롤러 어플리케이션</title>
-</head>
-<body>
-    <h1>웹 크롤러 어플리케이션</h1>
+{% extends 'osoriCrawlerAPI/base.html' %}
+
+{% block content %}
     <p>{{ return_message }}</p>
     <form action="/signin/" method="post">
         <label>아이디</label><input name="email" type="email">
@@ -13,5 +8,5 @@
         <input name="push_token" value="-1" type="hidden">
         <button type="submit">로그인</button>
     </form>
-</body>
-</html>
+
+{% endblock %}

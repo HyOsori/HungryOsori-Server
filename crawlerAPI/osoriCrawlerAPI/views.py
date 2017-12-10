@@ -139,12 +139,12 @@ class SocialSign(APIView):
         if user is None:
             if re.match(' /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/i',
                         data['email']) is not None:
-                return ErrorResponse.error_response(-200, 'Invalid email address')
+                return ErrorResponse.error_response(-200, 'Invalid email address during social sign up')
 
             # checking email address is duplicated or not
             exist = UserProfile.objects.filter(email=data['email'], sign_up_type=data['sign_up_type'])
             if exist.count() != 0:
-                return ErrorResponse.error_response(-100, 'Already exist user_id')
+                return ErrorResponse.error_response(-100, 'Already exist user_id in social sign up')
 
             user = dict()
             user['email'] = data['email']
@@ -156,17 +156,15 @@ class SocialSign(APIView):
 
             if user_serializer.is_valid():
                 user_serializer.save()
-                return_data = {'message': 'Success', 'ErrorCode': 0}
-                return Response(return_data)
             else:
-                return ErrorResponse.error_response(-1, 'Error 1at the end')
+                return ErrorResponse.error_response(-300, 'Error in saving user date during sign up')
 
         # if user is already sign up, login the user
         else:
             try:
                 email = data['email']
             except MultiValueDictKeyError:
-                return_data = {'message': 'No email', 'ErrorCode': -1}
+                return_data = {'message': 'No email', 'ErrorCode': -201}
                 return Response(return_data)
             try:
                 push_token = data['push_token']
@@ -184,22 +182,23 @@ class SocialSign(APIView):
                 return_data = {'message': 'Invalid user', 'ErrorCode': -100}
                 return Response(return_data)
 
-            user = UserProfile.objects.get(email=data['email'], sign_up_type=sign_up_type)
+        user = UserProfile.objects.get(email=data['email'], sign_up_type=sign_up_type)
 
-            user_token = dict()
-            user_token['owner'] = user
-            user_token['push_token'] = push_token
+        user_token = dict()
+        user_token['owner'] = user
+        user_token['push_token'] = push_token
 
-            # user: push token added
-            push_token_serializer = PushTokenSerializer(data=user_token)
+        # user: push token added
+        push_token_serializer = PushTokenSerializer(data=user_token)
+        # login -> create app token
+        token, created = Token.objects.get_or_create(user=user)
 
-            token, created = Token.objects.get_or_create(user=user)
-            if push_token_serializer.is_valid():
-                push_token_serializer.save()
-            data = {'token': token.key, 'email': email, 'message': "Login success", 'ErrorCode': 0}
-            return Response(data)
+        if push_token_serializer.is_valid():
+            push_token_serializer.save()
+        data = {'token': token.key, 'email': email, 'message': "Login success", 'ErrorCode': 0}
+        return Response(data)
 
-        return Response(return_data)
+
 
 
 # sign up by using email (just in our app)
@@ -317,7 +316,7 @@ class SignIn(APIView):
             return_data = {'token': token.key, 'email': email, 'message': "Login success", 'ErrorCode': 0}
             if push_token == '-1':
                 return redirect('/', return_message=return_data['message'])
-            return Response(data)
+            return Response(return_data)
 
         return Response(return_data)
 

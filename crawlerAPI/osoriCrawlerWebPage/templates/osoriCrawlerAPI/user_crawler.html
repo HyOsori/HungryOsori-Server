@@ -1,10 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-    {{ object_list }}
-</body>
-</html>
+{% extends 'osoriCrawlerAPI/base.html' %}
+
+{% block content %}
+    {% for crawler in object_list %}
+        <ul>
+            <li>
+                <div>
+                    <a href="#">{{ crawler.title }}</a>
+                </div>
+            </li>
+        </ul>
+    {% endfor %}
+{% endblock %}
