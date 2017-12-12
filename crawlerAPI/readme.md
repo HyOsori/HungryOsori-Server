@@ -1,18 +1,20 @@
 API
 =============================
-1. 전체 유저에 대한 정보조회
------------------------------
-url: /users/
 
-2. 회원가입
+1. 회원가입
 -----------------------------
-- url: /users/ 포스트 형태로 회원가입 요청을 보냄.  
+- url: api/signup/ POST METHOD로 회원가입 요청을 보냄.  (이메일 사용시 이 url로 접근)
+
+- 필요 데이터
 
 Data|Description
----|--- 
-user_id|이메일형식아이디
+---|---
+email|이메일형식아이디
 password|비밀번호
 name|사용자 이름
+sign_up_type|% 회원가입 타입
+
+% 회원가입 타입은 email로 가입이므로 'email'로
 
 - Response
 {
@@ -22,44 +24,105 @@ name|사용자 이름
 
 - ErrorCode
 
-|Data|Description|
+Data|Description|
 ---|---
-|0|성공|
-|-1|에러|
-|-100|이미 존재하는 유저|
-|-200|잘못된 이메일 포맷|
+0|성공
+-1|에러
+-100|이미 존재하는 유저
+-200|잘못된 이메일 포맷
+
+
+2.  소셜 회원가입/로그인
+-----------------------------
+- url : api/social_sign/  POST방식으로
+해당 url로 접근시 해당 소셜 매체로 가입된 아이디가 없으면 회원가입 후 로그인 처리, 기존에 가입된 회원은 바로 로그인 처리
+
+- 필요 데이터
+
+Data|Description
+---|---
+email|이메일형식아이디
+name|사용자 이름
+sign_up_type|% 회원가입 타입
+
+% 회원 가입 타입은 해당 소셜 매체를 넣음  
+ex) facebook, google, 등등
+
+- Response
+{'token': token, 'email': email, 'message': "Login success", 'ErrorCode': 0}
+
+- ErrorCode
+
+Data|Description|
+---|---
+0|성공
+-1|에러
+-100|이미 존재하는 유저(가입시)
+-101|없는 유저(로그인시)
+-200|잘못된 이메일 포맷(가입시)
+-300|유저 데이터 저장시 오류(가입시)
+-201|로그인시 유저 이메일 오류
+-400|로그인시 푸시 토큰 없음
+-500|로그인시 회원가입타입 없음
 
 3. 로그인
 -----------------------------
-* url: /user/ GET방식으로 보낸다.
+- url: api/signin/ POST METHOD으로 보낸다.
 
-|Data|Description|
+- 필요 데이터
+
+Data|Description|
 ---|---
-|user_id|사용자 아이디|
-|user_key|서버에서 발급하는 키, user_key없이 request를 날리면, 서버에서 발급|
-|password|비밀번호|
-|push_token|Pushtoken|
+email|사용자 아이디
+password|비밀번호
+push_token|Pushtoken
 
 * Response
-{
-	"user_key": "...",
-	"message":"Success",
-	"ErrorCode":0
-}
+{'token': token, 'email': email, 'message': "Login success", 'ErrorCode': 0}
 
 * ErrorCode
 
-|Data|Description|
+Data|Description
 ---|---
-|0|성공|
-|-1|에러|
-|-100|아이디 오류|
-|-200|비밀번호 오류|
-|-300|인증 필요|	
+0|성공
+-1|에러
+-100|아이디 없음
+-200|비밀번호 없음
+-300|푸시토큰 없음
+-101|가입 안한 유저
+-102|이메일 인증 필요
+-103|이메일 오류
+-201|비밀번호 에러
 
-4. 크롤러 전체 목록
+4. 로그아웃
 -----------------------------
-* url: /crawlers/
+- url: api/logout/ POST METHOD로
+
+- 필요 데이터
+
+Data|Description|
+---|---
+email|사용자 아이디
+sign_up_type|회원가입 방식
+
+- response {
+	'ErrorCode': 0, 'message': 'Logout success' }
+
+
+- ErrorCode
+
+Data|Description
+---|---
+0|성공
+-100|이메일 누락
+-200|회원가입방식누락
+-400|그런 유저 없음
+-300|토큰 누락
+
+
+5. 크롤러 전체 목록
+-----------------------------
+* url: api/crawlers/ GET METHOD로 요청 HTTP HEADER에 key: Authorization, value: Token {{token}} 의 내용을 포함해줘야 올바르게 리턴
 
 * Response
 {
@@ -77,19 +140,20 @@ name|사용자 이름
 
 * ErrorCode
 
-|Data|Description|
+Data|Description
 ---|---
-|0|성공|
-|-100|크롤러가 한개도 없음|
+0|성공
+-100|크롤러가 한개도 없음
+detail: no authentication credentials|인증되지 않은 유저
 
-5. 유저가 구독중인 크롤러 목록
+6. 유저가 구독중인 크롤러 목록
 -----------------------------
-* url:/subscription/ 
+* url:/subscription/
 
-|Data|Description|
+Data|Description
 ---|---
-|user_id|사용자 아이디|
-|user_key|서버에서 발급하는 키|
+user_id|사용자 아이디
+user_key|서버에서 발급하는 키
 
 * Response
 {
@@ -184,7 +248,7 @@ name|사용자 이름
 
 10. 패스워드 변경
 -----------------------------
-* url:/password/ 
+* url:/password/
 put method를 사용하여 user_id와 password, new_password를 보낸다.
 |Data|Description|
 ---|---
@@ -207,7 +271,7 @@ put method를 사용하여 user_id와 password, new_password를 보낸다.
 
 11. 비밀번호 찾기
 -------------------------
-* url: password/ 
+* url: password/
 임시로 비밀번호를 설정해두고 이를 이메일로 보내주는 형태 포스트 방식으로 user_id를 보낸다
 
 |Data|Description|

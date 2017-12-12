@@ -7,13 +7,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from osoriCrawlerAPI.models import UserProfile, Crawler, Subscription, PushToken
 from osoriCrawlerAPI.serializers import UserProfileSerializer, CrawlerSerializer, SubscriptionSerializer, PushTokenSerializer
-from crawlerAPI.keys import HOST_IP
+from crawlerAPI.keys import HOST_IP, PORT_NUMBER
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.mail import send_mail
 from django.http import HttpResponse, HttpRequest
 from django.shortcuts import render, redirect
 from django.utils.datastructures import MultiValueDictKeyError
+from django.utils import timezone
 
 import re, json, random
 
@@ -169,17 +170,17 @@ class SocialSign(APIView):
             try:
                 push_token = data['push_token']
             except MultiValueDictKeyError:
-                return_data = {'message': 'No push token', 'ErrorCode': -1}
+                return_data = {'message': 'No push token', 'ErrorCode': -400}
                 return Response(return_data)
             try:
                 sign_up_type = data['sign_up_type']
             except MultiValueDictKeyError:
-                return_data = {'message': 'No sign up type', 'ErrorCode': -1}
+                return_data = {'message': 'No sign up type', 'ErrorCode': -500}
                 return Response(return_data)
             try:
                 UserProfile.objects.get(email=email)
             except ObjectDoesNotExist:
-                return_data = {'message': 'Invalid user', 'ErrorCode': -100}
+                return_data = {'message': 'Invalid user in login', 'ErrorCode': -100}
                 return Response(return_data)
 
         user = UserProfile.objects.get(email=data['email'], sign_up_type=sign_up_type)
@@ -197,8 +198,6 @@ class SocialSign(APIView):
             push_token_serializer.save()
         data = {'token': token.key, 'email': email, 'message': "Login success", 'ErrorCode': 0}
         return Response(data)
-
-
 
 
 # sign up by using email (just in our app)
@@ -234,7 +233,7 @@ class SignUp(APIView):
         is_auth = self.make_auth_key()
 
         # send confirm email
-        url = 'http://' + HOST_IP + '/email_auth/'+is_auth+'/'
+        url = 'http://' + HOST_IP + PORT_NUMBER + '/email_auth/'+is_auth+'/'
         user = dict()
         user['email'] = data['email']
         user['name'] = data['name']
@@ -272,35 +271,35 @@ class SignIn(APIView):
         try:
             email = data['email']
         except MultiValueDictKeyError:
-            return_data = {'message': 'No email', 'ErrorCode': -1}
+            return_data = {'message': 'No email', 'ErrorCode': -100}
             return Response(return_data)
         try:
             password = data['password']
         except MultiValueDictKeyError:
-            return_data = {'message': 'No password', 'ErrorCode': -1}
+            return_data = {'message': 'No password', 'ErrorCode': -200}
             return Response(return_data)
         try:
             push_token = data['push_token']
         except MultiValueDictKeyError:
-            return_data = {'message': 'No push token', 'ErrorCode': -1}
+            return_data = {'message': 'No push token', 'ErrorCode': -300}
             return Response(return_data)
         try:
             UserProfile.objects.get(email=email, sign_up_type='email')
         except ObjectDoesNotExist:
-            return_data = {'message': 'Invalid user', 'ErrorCode': -100}
+            return_data = {'message': 'Invalid user', 'ErrorCode': -101}
             return Response(return_data)
         if UserProfile.objects.get(email=email).is_email_authenticated() is not True:
-            return_data = {'message': 'Need authentication', 'ErrorCode': -300}
+            return_data = {'message': 'Need authentication', 'ErrorCode': -102}
             return Response(return_data)
 
         user = Auth.authenticate(email=email, sign_up_type='email', password=password)
         if user is -1:
-            return_data = {'message': 'Invalid user', 'ErrorCode': -100}
+            return_data = {'message': 'Invalid user', 'ErrorCode': -103}
             if push_token == '-1':
                 return redirect('/', return_message=return_data['message'])
             return Response(return_data)
         elif user is -2:
-            return_data = {'message': 'Invalid password', 'ErrorCode': -200}
+            return_data = {'message': 'Invalid password', 'ErrorCode': -201}
             if push_token == '-1':
                 return redirect('/', return_message=return_data['message'])
             return Response(return_data)
@@ -328,23 +327,23 @@ class Logout(APIView):
         try:
             email = request.data['email']
         except exceptions:
-            return ErrorResponse.error_response(-1, 'No email')
+            return ErrorResponse.error_response(-100, 'No email')
         try:
             sign_up_type = request.data['sign_up_type']
         except exceptions:
-            return ErrorResponse.error_response(-1, 'No sign up type')
+            return ErrorResponse.error_response(-200, 'No sign up type')
         try:
             user = UserProfile.objects.get(email=email, sign_up_type=sign_up_type)
         except exceptions:
-            return ErrorResponse.error_response(-1, 'No User')
+            return ErrorResponse.error_response(-400, 'No User')
         try:
             token = Token.objects.get(user=user)
         except exceptions:
-            return ErrorResponse.error_response(-1, 'No Tokens')
+            return ErrorResponse.error_response(-300, 'No Tokens')
 
         token.delete()
-        data = {'ErrorCode': 0, 'message': 'Logout success'}
-        return Response(data)
+        return_data = {'ErrorCode': 0, 'message': 'Logout success'}
+        return Response(return_data)
 
 
 class UserDetail(APIView):
@@ -358,7 +357,7 @@ class UserDetail(APIView):
     def put(self, request, format=None):
         email = request.GET['email']
         user = self.get_object(email=email)
-        if user == False:
+        if user is False:
             return Response("Invalid user", status=status.HTTP_400_BAD_REQUEST)
         data = request.data
         data['password'] = make_password(password=data['password'], salt=None, hasher='default')
@@ -381,13 +380,13 @@ class CrawlerList(APIView):
     def get(self, request, format=None):
         crawlers = Crawler.objects.all()
         if crawlers != None:
-            crawlerSerializer=CrawlerSerializer(crawlers, many=True)
-            return_data={"message": "Success", "crawlers": crawlerSerializer.data, 'ErrorCode': 0}
+            crawlerSerializer = CrawlerSerializer(crawlers, many=True)
+            return_data = {"message": "Success", "crawlers": crawlerSerializer.data, 'ErrorCode': 0}
             return Response(return_data)
         return ErrorResponse().error_response(-100, 'No crawler list')
 
     def post(self, request, format=None):
-        crawlerSerializer=CrawlerSerializer(data=request.data)
+        crawlerSerializer = CrawlerSerializer(data=request.data)
         if crawlerSerializer.is_valid():
             crawlerSerializer.save()
             return Response(crawlerSerializer.data)
@@ -405,7 +404,7 @@ class CrawlerDetail(APIView):
         name = request.GET['title']
         crawler = self.get_object(name)
         if crawler != False:
-            crawlerSerializer=CrawlerSerializer(crawler)
+            crawlerSerializer = CrawlerSerializer(crawler)
             return Response(crawlerSerializer.data)
         return Response("Invalid crawler", status=status.HTTP_400_BAD_REQUEST)
 
@@ -413,7 +412,7 @@ class CrawlerDetail(APIView):
         crawler = self.get_object(name)
         if crawler == False:
             return Response("Invalid crawler", status=status.HTTP_400_BAD_REQUEST)
-        crawlerSerializer=CrawlerSerializer(crawler, data=request.data)
+        crawlerSerializer = CrawlerSerializer(crawler, data=request.data)
         if crawlerSerializer.is_valid():
             crawlerSerializer.save()
             return Response(crawlerSerializer.data)
@@ -421,7 +420,7 @@ class CrawlerDetail(APIView):
 
     def delete(self, request, format=None):
         crawler_id = request.GET['crawler_id']
-        crawler=self.get_object(crawler_id)
+        crawler = self.get_object(crawler_id)
         if crawler is False:
             Response("Invalid crawler", status=status.HTTP_400_BAD_REQUEST)
         crawler.delete()
@@ -441,38 +440,49 @@ class SubscriptionList(APIView):
         if not user_info['result']:
             return ErrorResponse().error_response(-1, user_info['message'])
         '''
-        subscriptionsSerializer=SubscriptionSerializer(data=request.data)
+        subscriptionsSerializer = SubscriptionSerializer(data=request.data)
         if subscriptionsSerializer.is_valid():
             subscriptionsSerializer.save()
-            return_data={"message":"success", "ErrorCode":0}
+            return_data = {"message": "success", "ErrorCode": 0}
             return Response(return_data)
         return ErrorResponse().error_response(-1, "Error")
 
 
 class SubscriptionDetail(APIView):
-    def post(self, request, format=None):
+    def get(self, request, format = None):
+        subscriber = request.user
+        subscription = Subscription.objects.filter(subscriber=subscriber)
+        subscription_serializer = SubscriptionSerializer(subscription, many=True)
+        return_data = {"message": "Successfully return subscriptions",
+                       "subscriptions": subscription_serializer.data, "ErrorCode": 0}
+        return Response(return_data)
 
-        email = request.data['email']
-        subscription = Subscription.objects.filter(email=email)
-        if subscription.count() == 0:
-            return Response(-200, "No subscriptions")
-        subscriptionSerializer = SubscriptionSerializer(subscription, many=True)
-        return_data={"message":'success', "subscriptions":subscriptionSerializer.data, 'ErrorCode':0}
+    def post(self, request, format = None):
+        try:
+            crawler_id = request.data['crawler_id']
+        except MultiValueDictKeyError:
+            return ErrorResponse.error_response(-101, "No crawler id data in http request")
+        try:
+            crawler = Crawler.objects.get(crawler_id=crawler_id)
+        except ObjectDoesNotExist:
+            return ErrorResponse.error_response(-200, "Invalid crawler")
+        subscriber = request.user
+        Subscription.objects.create(subscriber=subscriber, crawler=crawler, latest_pushtime=timezone.now())
+        return_data = {"message": 'success', 'ErrorCode': 0}
         return Response(return_data)
 
     def delete(self, request, format=None):
-
-        email=request.data['email']
-        crawler_id=request.data['crawler_id']
-        subscriptions = Subscription.objects.filter(email=email)
-        if subscriptions == None :
-            return ErrorResponse().error_response(-1, 'Invalid user_id')
-        subscription = subscriptions.filter(crawler_id=crawler_id)
-
-        if subscription == False:
-            return Response(-1, "Invalid crawler_id")
+        try:
+            crawler_id = request.data['crawler_id']
+        except MultiValueDictKeyError:
+            return ErrorResponse.error_response(-102, "No crawler data in request")
+        subscriber = request.user
+        try:
+            subscription = Subscription.objects.get(subscriber=subscriber, crawler_id=crawler_id)
+        except ObjectDoesNotExist:
+            return ErrorResponse.error_response(-200, "Invalid subscriptions")
         subscription.delete()
-        return_data={"message":"success", "ErrorCode":0}
+        return_data = {"message": "success", "ErrorCode": 0}
         return Response(return_data)
 
 

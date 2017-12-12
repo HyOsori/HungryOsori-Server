@@ -1,8 +1,10 @@
 from rest_framework import serializers
 from osoriCrawlerAPI.models import UserProfile, Crawler, Subscription, PushToken
+from rest_framework.validators import UniqueTogetherValidator
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = UserProfile
         fields = ('email', 'name', 'password', 'is_auth', 'is_active', 'is_admin', 'created', 'last_login', 'sign_up_type')
