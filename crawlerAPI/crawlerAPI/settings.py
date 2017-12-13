@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+import sys
 from . import keys
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -18,7 +19,7 @@ TEMPLATES_DIRS = (os.path.join(BASE_DIR, 'templates'),)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
-import sys
+
 DJANGO_PROJECT_PATH = 'D:/git/HungryOsori-Server/crawlerAPI'
 if DJANGO_PROJECT_PATH not in sys.path:
     sys.path.append(DJANGO_PROJECT_PATH)
@@ -65,6 +66,7 @@ ROOT_URLCONF = 'crawlerAPI.urls'
 
 TEMPLATES = [
     {
+
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [],
         'APP_DIRS': True,
@@ -153,27 +155,25 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         #Oauth
-        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
-        'rest_framework_social_oauth2.authentication.SocialAuthentication',
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.TokenAuthentication',
     )
 }
 
 AUTHENTICATION_BACKENDS = (
-    #Oauth provider
-    #Using Facebook Oauth2
+    # Oauth provider
+    # Using Facebook Oauth2
     'social.backends.facebook.FacebookAppOAuth2',
     'social.backends.facebook.FacebookOAuth2',
 
-    #django-rest-framework-social-oauth2
+    # django-rest-framework-social-oauth2
     'rest_framework_social_oauth2.backends.DjangoOAuth2',
 
-    #Django
+    # Django
     'django.contrib.auth.backends.ModelBackend',
 )
 
-#password_hasher
+# password_hasher
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
     'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
@@ -189,7 +189,7 @@ EMAIL_HOST_USER = keys.EMAIL_HOST_USER
 EMAIL_HOST_PASSWORD = keys.EMAIL_HOST_PASSWORD
 EMAIL_PORT = 587
 
-#Oauth
+# Oauth
 SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/'
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
 

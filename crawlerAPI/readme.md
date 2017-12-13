@@ -96,7 +96,7 @@ Data|Description
 
 4. 로그아웃
 -----------------------------
-- url: api/logout/ POST METHOD로
+- url: /api/logout/ POST METHOD로
 
 - 필요 데이터
 
@@ -120,7 +120,7 @@ Data|Description
 
 5. 크롤러 전체 목록
 -----------------------------
-* url: api/crawlers/ GET METHOD로 요청 HTTP HEADER에 key: Authorization, value: Token {{token}} 의 내용을 포함해줘야 올바르게 리턴
+* url: /api/crawlers/ GET METHOD로 요청 HTTP HEADER에 key: Authorization, value: Token {{token}} 의 내용을 포함해줘야 올바르게 리턴
 
 * Response
 {
@@ -146,7 +146,7 @@ detail: no authentication credentials|인증되지 않은 유저
 
 6. 유저가 구독중인 크롤러 목록
 -----------------------------
-* url:/subscription/ get 방식으로 요청
+* url:/api/subscription/ get 방식으로 요청
 
 Data|Description
 ---|---
@@ -168,7 +168,7 @@ Data|Description
 
 6. 유저가 구독하려는 크롤러 추가
 -----------------------------
-* url: /subscriptions/ POST방식으로 요청
+* url: /api/subscriptions/ POST방식으로 요청
 
 Data|Description
 ---|---
@@ -190,7 +190,7 @@ Data|Description
 
 7. 유저가 구독하고 있는 크롤러 제거
 -----------------------------
-* url: /subscription/ 이 url에 delete 메소드 이용
+* url: /api/subscription/ 이 url에 delete 메소드 이용
 
 Data|Description
 ---|---
@@ -212,7 +212,7 @@ Data|Description
 
 9. 푸시토큰 등록
 -----------------------------
-* url: /push_token/ POST방식으로 요청
+* url: /api/push_token/ POST방식으로 요청
 
 Data|Description
 ---|---
@@ -226,14 +226,14 @@ push_token|firebase cloud message token
 
 * ErrorCode
 
-|Data|Description|
+|Data|Description
 ---|---
-|0|성공|
-|-100|request에 푸시토큰 데이터 없음|
+|0|성공
+|-100|request에 푸시토큰 데이터 없음
 
 10. 푸시토큰 삭제
 ---------------------------
-* url: /push_token/ DELETE방식으로 요청
+* url: /api/push_token/ DELETE방식으로 요청
 
 * 필요 데이터 없음, 로그인된 유저의 푸시 토큰을 삭제
 
@@ -245,21 +245,22 @@ push_token|firebase cloud message token
 
 * ErrorCode
 
-|Data|Description|
+Data|Description
 ---|---
-|0|성공|
-|-100|request에 푸시토큰 데이터 없음|
+0|성공
+-100|request에 푸시토큰 데이터 없음
 
 
 11. 패스워드 변경
 -----------------------------
-* url:/password/
-put method를 사용하여 user_id와 password, new_password를 보낸다.
-|Data|Description|
+* url:/api/password/
+PUT METHOD를 사용
+
+Data|Description
 ---|---
-|user_id|사용자아이디|
-|password|현재사용중인 비밀번호|
-|new_password|변경할 비밀번호|
+email|사용자아이디
+password|현재사용중인 비밀번호
+new_password|변경할 비밀번호
 
 * Response
 {
@@ -268,20 +269,24 @@ put method를 사용하여 user_id와 password, new_password를 보낸다.
 
 * ErrorCode
 
-|Data|Description|
+Data|Description|
 ---|---
 0|성공
--100|현재 비밀번호와 다름
--1|에러
+-101|이메일 없음
+-102|비밀번호 없음
+-103|새 비밀번호 없음
+-200|유효하지 않은 유저
+-300|비밀번호 불일치
 
 12. 비밀번호 찾기
 -------------------------
-* url: password/
-임시로 비밀번호를 설정해두고 이를 이메일로 보내주는 형태 포스트 방식으로 user_id를 보낸다
+* url: api/password/?email=이메일..  
+GET METHOD 사용.
+임시로 비밀번호를 설정해두고 이를 이메일로 보내주는 형태
 
-|Data|Description|
+Data|Description|
 ---|---
-|user_id|사용자아이디|
+email|사용자아이디
 
 * Response
 {
@@ -291,7 +296,31 @@ put method를 사용하여 user_id와 password, new_password를 보낸다.
 
 * ErrorCode
 
-|Data|Description|
+Data|Description
 ---|---
 0|성공
--1|에러
+-100|이메일 데이터 누락
+-101|유저 없음
+
+13. 크롤러별 구독자 목록(푸시서버용)
+-------------------------------
+* url: api/subscribers_push_token/?crawler_id=크롤러아이디  
+GET METHOD로 요청
+
+Data|Description|
+---|---
+crawler_id|알고자 하는 크롤러 아이디
+
+* Response
+{
+'ErrorCode': 0,   
+'data': total,   
+'message': 'successfully return list'
+}
+
+* ErrorCode
+
+Data|Description
+---|---
+0|성공
+-100|크롤러 아이디 없음

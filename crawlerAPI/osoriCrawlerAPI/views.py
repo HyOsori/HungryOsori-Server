@@ -1,13 +1,14 @@
 from rest_framework import status, exceptions
 from rest_framework.views import APIView
 from rest_framework.response import Response
-
-from rest_framework.authentication import TokenAuthentication, BasicAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny, BasePermission
 from rest_framework.authtoken.models import Token
+from rest_framework.decorators import permission_classes
+
 from osoriCrawlerAPI.models import UserProfile, Crawler, Subscription, PushToken
 from osoriCrawlerAPI.serializers import UserProfileSerializer, CrawlerSerializer, SubscriptionSerializer, PushTokenSerializer
 from crawlerAPI.keys import HOST_IP, PORT_NUMBER
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.mail import send_mail
@@ -16,14 +17,17 @@ from django.shortcuts import render, redirect
 from django.utils.datastructures import MultiValueDictKeyError
 from django.utils import timezone
 
+
 import re, json, random
-
-
 
 
 # Authentication. ----------------
 # 1. check id and password
 # 2. method for email auth (When user sign up by email)
+# Default Permission ----> IsAuthenticated
+# if you want to change default permission, go to setting.py and find the option
+
+
 class Auth:
 
     # find user and check password
@@ -58,10 +62,22 @@ class ErrorResponse:
         return Response(data)
 
 
+class PasswordClassPermission(BasePermission):
+
+    def has_permission(self, request, view):
+        if request.method == 'GET':
+            return True
+
+        return request.user and request.user.is_authenticated()
+
+
 # for password change or find
 class Password(APIView):
     # make temp password. To use find password
-    def make_temp_password(self):
+    permission_classes = (PasswordClassPermission, )
+
+    @staticmethod
+    def make_temp_password():
         strings = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'q',
                    'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
         password = ''
@@ -70,24 +86,30 @@ class Password(APIView):
         return password
 
     # find password. making temp password and send it to email.
-    def post(self, request):
-        email = request.data['email']
-        temp_password = Password().make_temp_password()
+    def get(self, request):
         try:
-            user = UserProfile.objects.get(email=email)
+            email = request.GET['email']
+        except MultiValueDictKeyError:
+            return ErrorResponse.error_response(-100, 'Please give email')
+
+        temp_password = Password().make_temp_password()
+
+        try:
+            user = UserProfile.objects.get(email=email, sign_up_type='email')
         except ObjectDoesNotExist:
-            return ErrorResponse.error_response(-1, "Invalid user")
-     
+            return ErrorResponse.error_response(-101, "Invalid user")
+
+        user.password = make_password(password=temp_password, salt=None, hasher='default')
+        user.save()
+
         send_mail(
             'temp password',
             temp_password + ' login and modify your password.',
             'bees1114@naver.com',
             [email],
         )
-        user.password = make_password(password=temp_password, salt=None, hasher='default')
-        user.save()
-        data = {'message': 'Temp password sent', 'ErrorCode': 0}
-        return HttpResponse(data)
+        return_data = {'message': 'Temp password sent', 'ErrorCode': 0}
+        return Response(return_data)
 
     # password change
     def put(self, request):
@@ -96,27 +118,23 @@ class Password(APIView):
         try:
             email = request.data['email']
         except MultiValueDictKeyError:
-            return ErrorResponse.error_response(-1, "No email")
+            return ErrorResponse.error_response(-101, "No email")
         try:
             password = request.data['password']
         except MultiValueDictKeyError:
-            return ErrorResponse.error_response(-1, "No current password")
+            return ErrorResponse.error_response(-102, "No current password")
         try:
             new_password = request.data['new_password']
         except MultiValueDictKeyError:
-            return ErrorResponse.error_response(-1, "No new_password")
-        try:
-            sign_up_type = request.data['sign_up_type']
-        except MultiValueDictKeyError:
-            return ErrorResponse.error_response(-1, "No sign_up_type")
+            return ErrorResponse.error_response(-103, "No new_password")
 
         try:
-            user = UserProfile.objects.get(email=email, sign_up_type=sign_up_type)
+            user = UserProfile.objects.get(email=email, sign_up_type='email')
         except ObjectDoesNotExist:
-            return ErrorResponse.error_response(-1, "No user")
+            return ErrorResponse.error_response(-200, "Invalid user")
         chk_password = check_password(password=password, encoded=user.password)
         if chk_password is False:
-            return ErrorResponse.error_response(-100, "Not correct current password")
+            return ErrorResponse.error_response(-300, "Not correct current password")
         user.password = make_password(password=new_password, salt=None, hasher='default')
         user.save()
         return_data = {"message": "success", "ErrorCode": 0}
@@ -233,7 +251,7 @@ class SignUp(APIView):
         is_auth = self.make_auth_key()
 
         # send confirm email
-        url = 'http://' + HOST_IP + PORT_NUMBER + '/email_auth/'+is_auth+'/'
+        url = 'http://' + HOST_IP + ':' + PORT_NUMBER + '/api/email_auth/'+is_auth+'/'
         user = dict()
         user['email'] = data['email']
         user['name'] = data['name']
@@ -350,26 +368,35 @@ class UserDetail(APIView):
         except UserProfile.DoesNotExist:
             return False
 
+    def get(self, request):
+        user = request.user
+        if user is None:
+            return ErrorResponse.error_response(-100, "Invalid user")
+        return_user_data = {'email': user.email, 'name': user.name}
+        return_data = {'ErrorCode': 0, 'message': 'successfully return user data', 'user_data': return_user_data}
+        return Response(return_data)
+
     def put(self, request, format=None):
-        email = request.GET['email']
-        user = self.get_object(email=email)
-        if user is False:
-            return Response("Invalid user", status=status.HTTP_400_BAD_REQUEST)
+        user = request.user
+        if user is None:
+            return ErrorResponse.error_response(-100, "Invalid user")
         data = request.data
         data['password'] = make_password(password=data['password'], salt=None, hasher='default')
-        userSerializer = UserProfileSerializer(user, data=data)
-        if userSerializer.is_valid():
-            userSerializer.save()
-            return Response(userSerializer.data)
-        return Response(userSerializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user_serializer = UserProfileSerializer(user, data=data)
+        if user_serializer.is_valid():
+            user_serializer.save()
+            return Response(user_serializer.data)
+        return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, format=None):
-        email = request.GET['email']
-        user = self.get_object(email=email)
-        if user is False:
-            return Response("Invalid user", status=status.HTTP_400_BAD_REQUEST)
+        current_user = request.user
+        try:
+            user = UserProfile.objects.get(email=current_user.email, sign_up_type=current_user.sign_up_type)
+        except ObjectDoesNotExist:
+            return ErrorResponse.error_response(-100, "Invalid user")
         user.delete()
-        return Response(email + " deleted")
+        return_data = {'ErrorCode': 0, 'message': 'successfully deleted'}
+        return Response(return_data)
 
 
 class CrawlerList(APIView):
@@ -490,7 +517,6 @@ class PushTokenDetail(APIView):
         owner = request.user
         push_token = PushToken.objects.get(owner=owner)
         if push_token is not None:
-            push_token_serializer = PushTokenSerializer(push_token)
             return_data = {'ErrorCode': 0,
                            'data': {'owner': owner.__str__(), 'push_token': push_token.push_token},
                            'message': 'success'}
@@ -508,23 +534,21 @@ class PushTokenDetail(APIView):
 
 
 class SubscriberPushToken(APIView):
-    def post(self, request):
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+
+    def get(self, request):
         try:
-            subscriber = Subscription.objects.filter(crawler_id=request.data['crawler_id'])
-        except:
-            data={'return_code': -100, 'message':'Invalid crawler_id'}
-            return Response(data)
-        #data={'subscriber':subscriber[0].user_id}
-        #return Response(data)
+            crawler_id = request.GET['crawler_id']
+        except MultiValueDictKeyError:
+            return ErrorResponse.error_response(-100, 'Invalid crawler_id')
+        subscription_list = Subscription.objects.filter(crawler_id=crawler_id)
         total = []
-        for subs in subscriber:
-            push_token = PushToken.objects.filter(email=subs.email)
-            for pushtoken in push_token:
-                arr = {'email': pushtoken.email, 'push_token': pushtoken.push_token}
+        for subscription in subscription_list:
+            subscriber = subscription.subscriber
+            push_token_list = PushToken.objects.filter(owner=subscriber)
+            for push_token in push_token_list:
+                arr = {'email': push_token.owner.email, 'push_token': push_token.push_token}
                 total.append(arr)
 
-        #except:
-        #    data={'return_code':-200, 'message':'No subscriber'}
-        #    return Response(data)
-        data = {'return_code': 0, 'data': total}
-        return Response(data)
+        return_data = {'ErrorCode': 0, 'data': total, 'message': 'successfully return list'}
+        return Response(return_data)
