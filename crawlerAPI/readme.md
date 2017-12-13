@@ -100,10 +100,10 @@ Data|Description
 
 - 필요 데이터
 
-Data|Description|
+Data|Description  
 ---|---
-email|사용자 아이디
-sign_up_type|회원가입 방식
+필요없음|필요없음
+
 
 - response {
 	'ErrorCode': 0, 'message': 'Logout success' }
@@ -114,11 +114,9 @@ sign_up_type|회원가입 방식
 Data|Description
 ---|---
 0|성공
--100|이메일 누락
--200|회원가입방식누락
 -400|그런 유저 없음
--300|토큰 누락
-
+-300|토큰 누락(로그인된 유저 아님)
+-200|푸시토큰이 등록되지 않은 유저
 
 5. 크롤러 전체 목록
 -----------------------------
@@ -133,7 +131,7 @@ Data|Description
 		},
 		{
 			...
-		}	
+		}
 	]
 	"ErrorCode":0
 }
@@ -148,16 +146,15 @@ detail: no authentication credentials|인증되지 않은 유저
 
 6. 유저가 구독중인 크롤러 목록
 -----------------------------
-* url:/subscription/
+* url:/subscription/ get 방식으로 요청
 
 Data|Description
 ---|---
-user_id|사용자 아이디
-user_key|서버에서 발급하는 키
+데이터|노필요
 
 * Response
 {
-	"message":"success",
+	"message":"Successfully return subscriptions",  
 	"subscriptions": [
 		{
 			...
@@ -168,21 +165,14 @@ user_key|서버에서 발급하는 키
 
 * ErrorCode
 
-|Data|Description|
----|---
-|0|성공|
-|-100|유효하지 않은 유저|
-|-200|구독하고 있는 크롤러 없음|
 
 6. 유저가 구독하려는 크롤러 추가
 -----------------------------
-* url: /subscriptions/
+* url: /subscriptions/ POST방식으로 요청
 
-|Data|Description|
+Data|Description
 ---|---
-|user_id|사용자 아이디|
-|user_key|서버에서 발급받은 키|
-|crawler_id|구독하려는 크롤러 id|
+crawler_id|구독하려는 크롤러 id
 
 * Response
 {
@@ -192,21 +182,19 @@ user_key|서버에서 발급하는 키
 
 * ErrorCode
 
-|Data|Description|
+Data|Description
 ---|---
-|0|성공|
-|-100|유효하지 않은 유저|
-|-1|에러|
+0|성공
+-101|크롤러 데이터 전송좀
+-200|그런 크롤러 없음
 
 7. 유저가 구독하고 있는 크롤러 제거
 -----------------------------
 * url: /subscription/ 이 url에 delete 메소드 이용
 
-|Data|Description|
+Data|Description
 ---|---
-|user_id|사용자 아이디|
-|user_key|서버에서 발급받은 키|
-|crawler_id|구독하려는 크롤러 id|
+crawler_id|구독하려는 크롤러 id
 
 * Response
 {
@@ -216,21 +204,19 @@ user_key|서버에서 발급하는 키
 
 * ErrorCode
 
-|Data|Description|
+Data|Description
 ---|---
-|0|성공|
-|-100|유효하지 않은 유저
-|-1|에러
+0|성공
+-101|request에 크롤러 데이터 없음
+-200|유효하지 않은 구독목록
 
 9. 푸시토큰 등록
 -----------------------------
-* url: /tokens/
+* url: /push_token/ POST방식으로 요청
 
-|Data|Description|
+Data|Description
 ---|---
-|user_id|사용자 아이디|
-|user_key|서버에서 발급받은 키|
-|token|firebase cloud message token|
+push_token|firebase cloud message token
 
 * Response
 {
@@ -243,10 +229,29 @@ user_key|서버에서 발급하는 키
 |Data|Description|
 ---|---
 |0|성공|
-|-100|유효하지 않은 유저|
-|-1|에러|
+|-100|request에 푸시토큰 데이터 없음|
 
-10. 패스워드 변경
+10. 푸시토큰 삭제
+---------------------------
+* url: /push_token/ DELETE방식으로 요청
+
+* 필요 데이터 없음, 로그인된 유저의 푸시 토큰을 삭제
+
+* Response
+{
+	"message":"success",
+	"ErrorCode":0
+}
+
+* ErrorCode
+
+|Data|Description|
+---|---
+|0|성공|
+|-100|request에 푸시토큰 데이터 없음|
+
+
+11. 패스워드 변경
 -----------------------------
 * url:/password/
 put method를 사용하여 user_id와 password, new_password를 보낸다.
@@ -269,7 +274,7 @@ put method를 사용하여 user_id와 password, new_password를 보낸다.
 -100|현재 비밀번호와 다름
 -1|에러
 
-11. 비밀번호 찾기
+12. 비밀번호 찾기
 -------------------------
 * url: password/
 임시로 비밀번호를 설정해두고 이를 이메일로 보내주는 형태 포스트 방식으로 user_id를 보낸다

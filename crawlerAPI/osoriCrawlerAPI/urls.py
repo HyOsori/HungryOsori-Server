@@ -16,11 +16,11 @@ urlpatterns = [
     url(r'^crawler/$', views.CrawlerDetail.as_view()),
     url(r'^subscriptions/$', views.SubscriptionList.as_view()),
     url(r'^subscription/$', views.SubscriptionDetail.as_view()),
-    url(r'^pushtokens/$', views.PushTokenList.as_view()),
-    url(r'^pushtoken/$', views.PushTokenDetail.as_view()),
+    url(r'^push_tokens/$', views.PushTokenList.as_view()),
+    url(r'^push_token/$', views.PushTokenDetail.as_view()),
     url(r'^email_auth/(?P<auth>.+)/$', views.Auth.email_auth),
     url(r'^password/$', views.Password.as_view()),
-    url(r'^subscribers_pushtoken/$', views.SubscriberPushToken.as_view()),
+    url(r'^subscribers_push_token/$', views.SubscriberPushToken.as_view()),
 
 
 ]

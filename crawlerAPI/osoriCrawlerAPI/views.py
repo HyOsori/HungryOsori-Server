@@ -325,15 +325,7 @@ class Logout(APIView):
 
     def post(self, request):
         try:
-            email = request.data['email']
-        except exceptions:
-            return ErrorResponse.error_response(-100, 'No email')
-        try:
-            sign_up_type = request.data['sign_up_type']
-        except exceptions:
-            return ErrorResponse.error_response(-200, 'No sign up type')
-        try:
-            user = UserProfile.objects.get(email=email, sign_up_type=sign_up_type)
+            user = request.user
         except exceptions:
             return ErrorResponse.error_response(-400, 'No User')
         try:
@@ -342,6 +334,10 @@ class Logout(APIView):
             return ErrorResponse.error_response(-300, 'No Tokens')
 
         token.delete()
+        try:
+            push_token = PushToken.objects.get(owner=user)
+        except ObjectDoesNotExist:
+            return ErrorResponse.error_response(-200, 'No Pushtoken')
         return_data = {'ErrorCode': 0, 'message': 'Logout success'}
         return Response(return_data)
 
@@ -433,20 +429,6 @@ class SubscriptionList(APIView):
         subscriptionSerializer = SubscriptionSerializer(subscription, many=True)
         return Response(subscriptionSerializer.data)
 
-    def post(self, request, format=None):
-        '''
-        TODO: 사용자 로그인 시에만 구동되도록
-        user_info = Auth().verify_user(request=request, email=request.data['email'], token=request.data['user_key'])
-        if not user_info['result']:
-            return ErrorResponse().error_response(-1, user_info['message'])
-        '''
-        subscriptionsSerializer = SubscriptionSerializer(data=request.data)
-        if subscriptionsSerializer.is_valid():
-            subscriptionsSerializer.save()
-            return_data = {"message": "success", "ErrorCode": 0}
-            return Response(return_data)
-        return ErrorResponse().error_response(-1, "Error")
-
 
 class SubscriptionDetail(APIView):
     def get(self, request, format = None):
@@ -475,7 +457,7 @@ class SubscriptionDetail(APIView):
         try:
             crawler_id = request.data['crawler_id']
         except MultiValueDictKeyError:
-            return ErrorResponse.error_response(-102, "No crawler data in request")
+            return ErrorResponse.error_response(-101, "No crawler data in request")
         subscriber = request.user
         try:
             subscription = Subscription.objects.get(subscriber=subscriber, crawler_id=crawler_id)
@@ -492,40 +474,37 @@ class PushTokenList(APIView):
         tokenSerializer=PushTokenSerializer(token, many=True)
         return Response(tokenSerializer.data)
 
-    def post(self, request, format=None):
-        '''
-        user_info = Auth().verify_user(request=request, user_id=request.data['user_id'], user_key=request.data['user_key'])
-        if not user_info['result']:
-            return ErrorResponse().error_response(-1, user_info['message'])
-        '''
-        tokenSerializer=PushTokenSerializer(data=request.data)
-        if tokenSerializer.is_valid():
-            tokenSerializer.save()
-            return_data={"message":"success", "ErrorCode":0}
-            return Response(return_data)
-        return ErrorResponse().error_response(-1, "Error")
-
 
 class PushTokenDetail(APIView):
-    def get_object(self, email):
+    def post(self, request, format=None):
+        owner = request.user
         try:
-            return PushToken.objects.get(email=email)
-        except PushToken.DoesNotExist:
-            return False
+            push_token = request.data['push_token']
+        except MultiValueDictKeyError:
+            return ErrorResponse.error_response('-100', 'no push_token data in request')
+        PushToken.objects.create(owner=owner, push_token=push_token)
+        return_data = {'ErrorCode': 0, 'message': 'success'}
+        return Response(return_data)
+
     def get(self, request, format=None):
-        token = self.get_object(email=request.GET['email'])
-        if token != None:
-            tokenSerializer=PushTokenSerializer(token)
-            return Response(tokenSerializer.data)
-        return Response("Invalid user-token", status= status.HTTP_400_BAD_REQUEST)
+        owner = request.user
+        push_token = PushToken.objects.get(owner=owner)
+        if push_token is not None:
+            push_token_serializer = PushTokenSerializer(push_token)
+            return_data = {'ErrorCode': 0,
+                           'data': {'owner': owner.__str__(), 'push_token': push_token.push_token},
+                           'message': 'success'}
+            return Response(return_data)
+        return ErrorResponse.error_response(-100, 'Error')
 
     def delete(self, request, format=None):
-        email = request.data['email']
-        token = PushToken.objects.filter(email=email)
-        if token == False:
-            return Response("Invalid user-token", status=status.HTTP_400_BAD_REQUEST)
-        token.delete()
-        return Response(" deleted")
+        owner = request.user
+        push_token = PushToken.objects.get(owner=owner)
+        if push_token is None:
+            return ErrorResponse.error_response(-100, 'push token is none')
+        push_token.delete()
+        return_data = {'message': 'push token deleted', 'ErrorCode': 0}
+        return Response(return_data)
 
 
 class SubscriberPushToken(APIView):
